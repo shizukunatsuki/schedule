@@ -1,0 +1,12 @@
+{
+  "name": "schedule",
+  "private": true,
+  "description": "一日十二节 · 作息时刻表",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.42.0"
+  }
+}

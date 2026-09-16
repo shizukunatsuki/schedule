@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F1F3EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1310" media="(prefers-color-scheme: dark)">
+<meta name="description" content="07:00–18:00 的作息时刻表，块高即时长，带实时红线、下课倒计时和 −7h～+6h 整体偏移。">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔔%3C/text%3E%3C/svg%3E">
+<title>一日十二节</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@700&display=swap">
+
+<style>
+:root{
+  --ground:#F1F3EE;
+  --surface:#FBFCF9;
+  --sunk:#E8EBE4;
+  --ink:#1A211C;
+  --muted:#6E7A72;
+  --faint:#9BA79F;
+  --line:#DBE1D7;
+  --pine:#2E5D4E;
+  --pine-soft:#E3ECE6;
+  --amber:#9C6B18;
+  --amber-soft:#F3E9D6;
+  --accent:#BE4520;
+  --accent-soft:#F6E1D9;
+  --ppm:1.9px;
+  --gutter:56px;
+  --thumb:18px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1310;
+    --surface:#171C18;
+    --sunk:#121613;
+    --ink:#E6ECE6;
+    --muted:#93A099;
+    --faint:#6B7972;
+    --line:#28312B;
+    --pine:#7FBBA3;
+    --pine-soft:#1A241E;
+    --amber:#D6A44A;
+    --amber-soft:#241D10;
+    --accent:#F0714A;
+    --accent-soft:#2B1811;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1310;
+  --surface:#171C18;
+  --sunk:#121613;
+  --ink:#E6ECE6;
+  --muted:#93A099;
+  --faint:#6B7972;
+  --line:#28312B;
+  --pine:#7FBBA3;
+  --pine-soft:#1A241E;
+  --amber:#D6A44A;
+  --amber-soft:#241D10;
+  --accent:#F0714A;
+  --accent-soft:#2B1811;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:760px;margin:0 auto;padding:40px 20px 72px}
+button{font:inherit;color:inherit}
+
+/* ---------- masthead ---------- */
+.masthead{display:flex;flex-direction:column;gap:10px;padding-bottom:26px;border-bottom:1px solid var(--line)}
+.eyebrow{margin:0;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+h1{
+  margin:0;
+  font-family:"Noto Serif SC",Georgia,serif;
+  font-weight:700;
+  font-size:clamp(34px,7vw,46px);
+  line-height:1.1;
+  letter-spacing:.04em;
+  text-wrap:balance;
+}
+.lede{margin:0;color:var(--muted);font-size:14px}
+.lede .mono{color:var(--ink)}
+.livetime{margin:0;font-size:13px;color:var(--faint);letter-spacing:.06em}
+
+/* ---------- offset control ---------- */
+.shift{
+  margin:26px 0 0;
+  background:var(--surface);
+  border:1px solid var(--line);
+  padding:18px 22px 20px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.shift-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.shift-actions{display:flex;gap:8px}
+.shift-title{margin:0;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
+.reset{
+  background:none;border:1px solid var(--line);padding:3px 10px;font-size:12px;letter-spacing:.08em;
+  color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s,opacity .15s;
+}
+.reset:hover{color:var(--accent);border-color:var(--accent)}
+.reset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.reset[disabled]{opacity:.35;cursor:default;pointer-events:none}
+.reset.primary{color:var(--accent);border-color:var(--accent)}
+.reset.primary:hover{background:var(--accent-soft)}
+
+.slider-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.nudge{
+  width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+  display:grid;place-items:center;cursor:pointer;color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;font-size:16px;line-height:1;
+  transition:color .15s,border-color .15s,background .15s,opacity .15s;
+}
+.nudge:hover{color:var(--accent);border-color:var(--accent)}
+.nudge:active{background:var(--accent-soft)}
+.nudge:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nudge[disabled]{opacity:.3;cursor:default;pointer-events:none}
+
+.track{position:relative;padding:12px 0 34px;--zero:0.5}
+.rail{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(12px + 14px);height:2px;background:var(--line)}
+.fill{position:absolute;top:calc(12px + 13px);height:4px;background:var(--accent);left:50%;width:0;transition:none}
+.zero{position:absolute;left:calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--zero));top:calc(12px + 8px);width:1px;height:14px;background:var(--faint);transform:translateX(-50%)}
+.ticks{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(12px + 22px);height:16px;display:flex;justify-content:space-between}
+.ticks i{position:relative;width:1px;height:4px;background:var(--line);display:block}
+.ticks i.major{height:7px;background:var(--faint)}
+.ticks i.major::before,.ticks i.major::after{
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.04em;white-space:nowrap;
+}
+.ticks i.major::before{content:attr(data-l);top:9px;color:var(--muted)}
+.ticks i.major::after{content:attr(data-t);top:21px;color:var(--faint);opacity:.75}
+.ticks i.zero-tick::before{color:var(--ink)}
+.range{
+  -webkit-appearance:none;appearance:none;position:relative;z-index:2;
+  width:100%;height:28px;margin:0;background:transparent;cursor:pointer;display:block;
+}
+.range:focus{outline:none}
+.range::-webkit-slider-runnable-track{height:28px;background:transparent}
+.range::-webkit-slider-thumb{
+  -webkit-appearance:none;width:var(--thumb);height:var(--thumb);border-radius:50%;
+  background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1.5px var(--accent);
+  margin-top:5px;transition:transform .15s ease,box-shadow .15s ease;
+}
+.range:hover::-webkit-slider-thumb,.range:active::-webkit-slider-thumb{transform:scale(1.18)}
+.range:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 1.5px var(--accent),0 0 0 6px var(--accent-soft)}
+.range::-moz-range-track{height:28px;background:transparent}
+.range::-moz-range-thumb{
+  width:12px;height:12px;border-radius:50%;
+  background:var(--accent);border:3px solid var(--surface);box-shadow:0 0 0 1.5px var(--accent);
+}
+.range:focus-visible::-moz-range-thumb{box-shadow:0 0 0 1.5px var(--accent),0 0 0 6px var(--accent-soft)}
+
+.readouts{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.ro{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden}
+.ro-l{margin:0;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
+.ro-v{margin:0;font-size:22px;line-height:1.25;letter-spacing:.02em;white-space:nowrap}
+.ro-v .was{color:var(--faint);font-size:15px}
+.ro-v .arr{color:var(--faint);font-size:14px;margin:0 6px}
+.ro-c{margin:0;font-size:12px;color:var(--muted);letter-spacing:.03em;min-height:1.6em}
+.shift[data-off="0"] .ro-v.big{color:var(--muted)}
+.shift:not([data-off="0"]) .ro-v.big{color:var(--accent)}
+.hint{margin:0;font-size:11.5px;color:var(--faint);letter-spacing:.04em;transition:color .3s}
+.hint.hot{color:var(--accent)}
+
+.chip{
+  display:inline-block;vertical-align:middle;margin-left:8px;padding:1px 7px;
+  font-size:10px;letter-spacing:.1em;text-transform:none;
+  background:var(--accent-soft);color:var(--accent);border-radius:2px;
+}
+.chip[hidden]{display:none}
+
+/* ---------- status ---------- */
+.status{
+  margin:18px 0 34px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  display:grid;
+  grid-template-columns:1.35fr 1fr;
+}
+.panel{padding:20px 22px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.panel + .panel{border-left:1px solid var(--line)}
+.plabel{margin:0;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
+.pname{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:27px;line-height:1.2}
+.pname.small{font-size:20px}
+.prange{margin:0;font-size:13px;color:var(--muted);letter-spacing:.04em}
+.meter{height:3px;background:var(--sunk);margin-top:6px;overflow:hidden}
+.meter span{display:block;height:100%;width:0;background:var(--accent);transition:width .9s linear}
+.pcount{margin:0;font-size:13px;color:var(--accent);letter-spacing:.04em}
+.status[data-state="off"] .meter{display:none}
+
+/* ---------- ribbon ---------- */
+.legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:11.5px;color:var(--muted)}
+.key{display:inline-flex;align-items:center;gap:7px}
+.dot{width:9px;height:9px;flex:none}
+.dot.lesson{background:var(--pine)}
+.dot.rest{background:var(--line)}
+.dot.lunch{background:var(--amber)}
+.legend .chip{margin-left:auto}
+
+.ribbon{position:relative;display:grid;grid-template-columns:var(--gutter) 1fr;height:calc(660 * var(--ppm))}
+.axis{position:relative;border-right:1px solid var(--line)}
+.tick{position:absolute;right:0;top:calc(var(--at) * var(--ppm));transform:translateY(-50%);padding-right:12px;font-size:11px;color:var(--faint);letter-spacing:.04em}
+.tick::after{content:"";position:absolute;right:-1px;top:50%;width:5px;height:1px;background:var(--line)}
+
+.segs{list-style:none;margin:0;padding:0}
+.seg{
+  height:calc(var(--min) * var(--ppm));
+  display:grid;
+  grid-template-columns:2.6rem 1fr auto;
+  align-items:center;
+  gap:10px;
+  padding:0 14px 0 12px;
+  border-bottom:1px solid var(--line);
+  background:var(--surface);
+  transition:opacity .3s ease;
+}
+.seg .idx{font-size:12.5px;color:var(--pine);letter-spacing:.02em}
+.seg .name{font-size:15px;font-weight:500;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg .time{font-size:12.5px;color:var(--muted);letter-spacing:.03em}
+
+.seg.rest{background:var(--sunk)}
+.seg.rest .name{font-size:10.5px;font-weight:400;color:var(--faint);letter-spacing:.16em}
+.seg.rest .time{font-size:10.5px;color:var(--faint)}
+.seg.rest .idx{font-size:10.5px;color:var(--faint)}
+
+.seg.lunch{background:var(--amber-soft)}
+.seg.lunch .name{font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:19px;letter-spacing:.1em}
+.seg.lunch .idx,.seg.lunch .time{color:var(--amber)}
+
+.seg.past{opacity:.42}
+.seg.current{background:var(--accent-soft);opacity:1}
+.seg.current .name{color:var(--accent)}
+.seg.current .idx,.seg.current .time{color:var(--accent)}
+
+.nowline{position:absolute;left:0;right:0;top:calc(var(--at) * var(--ppm));height:0;border-top:1.5px solid var(--accent);z-index:4;pointer-events:none}
+.nowline[hidden]{display:none}
+.nowpill{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  background:var(--accent);color:var(--ground);
+  font-size:10.5px;letter-spacing:.06em;padding:1px 5px;
+}
+
+/* ---------- footer ---------- */
+.tally{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:34px}
+.tally div{background:var(--surface);padding:14px 12px;display:flex;flex-direction:column;gap:3px}
+.tally dt{margin:0;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
+.tally dd{margin:0;font-size:17px;letter-spacing:.03em}
+.note{margin:18px 0 0;font-size:12px;color:var(--faint);text-align:center;letter-spacing:.04em}
+
+@media (max-width:560px){
+  :root{--ppm:1.7px;--gutter:46px}
+  .wrap{padding:28px 14px 56px}
+  .shift{padding:16px 14px 18px}
+  .readouts{grid-template-columns:1fr 1fr}
+  .ro:first-child{grid-column:1 / -1}
+  .ro-v{font-size:18px}
+  .ro-v .was{font-size:13px}
+  .ro-v .arr{margin:0 4px}
+  .status{grid-template-columns:1fr}
+  .panel + .panel{border-left:0;border-top:1px solid var(--line)}
+  .seg{grid-template-columns:2.2rem 1fr auto;padding:0 10px 0 8px;gap:8px}
+  .seg .name{font-size:14px}
+  .tally{grid-template-columns:repeat(2,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">作息时刻表</p>
+    <h1>一日十二节</h1>
+    <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，每节 40 分钟，课间 10 分钟，午休 80 分钟，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
+    <p class="livetime mono" id="clock">--:--:--</p>
+  </header>
+
+  <section class="shift" id="shift" data-off="0" aria-labelledby="shiftTitle">
+    <div class="shift-head">
+      <p class="shift-title" id="shiftTitle">整体偏移</p>
+      <div class="shift-actions">
+        <button class="reset primary" id="startNow" type="button" title="把第 1 节对齐到现在（取整到 10 分钟）">从现在开始</button>
+        <button class="reset" id="reset" type="button" disabled>复位到 0</button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <button class="nudge" id="minus" type="button" aria-label="提前 10 分钟">−</button>
+      <div class="track">
+        <div class="rail"></div>
+        <div class="fill" id="fill"></div>
+        <div class="zero"></div>
+        <div class="ticks" id="ticks" aria-hidden="true"></div>
+        <input class="range" id="range" type="range" min="-420" max="360" step="10" value="0"
+               aria-label="整体偏移，最早提前 7 小时到 00:00 开始，最晚推后 6 小时到 24:00 结束，步长 10 分钟" aria-valuetext="与原表一致">
+      </div>
+      <button class="nudge" id="plus" type="button" aria-label="推后 10 分钟">+</button>
+    </div>
+
+    <div class="readouts" aria-live="polite">
+      <div class="ro">
+        <p class="ro-l">偏移量</p>
+        <p class="ro-v big mono" id="offBig">0:00</p>
+        <p class="ro-c" id="offCap">与原表一致</p>
+      </div>
+      <div class="ro">
+        <p class="ro-l">第 1 节上课</p>
+        <p class="ro-v mono" id="roStart">07:00</p>
+        <p class="ro-c" id="roStartCap">原 07:00</p>
+      </div>
+      <div class="ro">
+        <p class="ro-l">第 12 节下课</p>
+        <p class="ro-v mono" id="roEnd">18:00</p>
+        <p class="ro-c" id="roEndCap">原 18:00</p>
+      </div>
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <section class="status" id="status" aria-live="polite">
+    <div class="panel">
+      <p class="plabel">现在<span class="chip mono" id="nowChip" hidden></span></p>
+      <p class="pname" id="nowName">—</p>
+      <p class="prange mono" id="nowRange"></p>
+      <div class="meter"><span id="meterFill"></span></div>
+      <p class="pcount mono" id="nowCount"></p>
+    </div>
+    <div class="panel">
+      <p class="plabel">接下来</p>
+      <p class="pname small" id="nextName">—</p>
+      <p class="prange mono" id="nextRange"></p>
+    </div>
+  </section>
+
+  <div class="legend">
+    <span class="key"><span class="dot lesson"></span>上课 40min</span>
+    <span class="key"><span class="dot rest"></span>课间 10min</span>
+    <span class="key"><span class="dot lunch"></span><span data-lunch=" 80min">午休 80min</span></span>
+    <span class="key">块高即时长</span>
+    <span class="chip mono" id="axisChip" hidden></span>
+  </div>
+
+  <div class="ribbon" id="ribbon">
+    <div class="axis" id="axis"></div>
+    <ol class="segs" id="segs"></ol>
+    <div class="nowline" id="nowline" hidden><span class="nowpill mono" id="nowpill">--:--</span></div>
+  </div>
+
+  <dl class="tally">
+    <div><dt>全天</dt><dd class="mono">11 小时</dd></div>
+    <div><dt>在课</dt><dd class="mono">8 小时</dd></div>
+    <div><dt>课间</dt><dd class="mono">100 分钟</dd></div>
+    <div><dt data-lunch="">午休</dt><dd class="mono">80 分钟</dd></div>
+  </dl>
+  <p class="note">红线随本机时间移动 · 上课时段自动高亮 · 时长不随偏移改变</p>
+</div>
+
+<script>
+const DAY = [
+  {k:"lesson", n:1,  s:"07:00", e:"07:40"},
+  {k:"rest",   n:null, s:"07:40", e:"07:50"},
+  {k:"lesson", n:2,  s:"07:50", e:"08:30"},
+  {k:"rest",   n:null, s:"08:30", e:"08:40"},
+  {k:"lesson", n:3,  s:"08:40", e:"09:20"},
+  {k:"rest",   n:null, s:"09:20", e:"09:30"},
+  {k:"lesson", n:4,  s:"09:30", e:"10:10"},
+  {k:"rest",   n:null, s:"10:10", e:"10:20"},
+  {k:"lesson", n:5,  s:"10:20", e:"11:00"},
+  {k:"rest",   n:null, s:"11:00", e:"11:10"},
+  {k:"lesson", n:6,  s:"11:10", e:"11:50"},
+  {k:"lunch",  n:null, s:"11:50", e:"13:10"},
+  {k:"lesson", n:7,  s:"13:10", e:"13:50"},
+  {k:"rest",   n:null, s:"13:50", e:"14:00"},
+  {k:"lesson", n:8,  s:"14:00", e:"14:40"},
+  {k:"rest",   n:null, s:"14:40", e:"14:50"},
+  {k:"lesson", n:9,  s:"14:50", e:"15:30"},
+  {k:"rest",   n:null, s:"15:30", e:"15:40"},
+  {k:"lesson", n:10, s:"15:40", e:"16:20"},
+  {k:"rest",   n:null, s:"16:20", e:"16:30"},
+  {k:"lesson", n:11, s:"16:30", e:"17:10"},
+  {k:"rest",   n:null, s:"17:10", e:"17:20"},
+  {k:"lesson", n:12, s:"17:20", e:"18:00"}
+];
+
+const BASE_START = 420, BASE_END = 1080;   // 07:00 – 18:00 before any offset
+const STEP = 10, MIN_OFF = -420, MAX_OFF = 360;   // −7 h puts 第 1 节 at 00:00, +6 h puts 第 12 节 at 24:00
+const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60+m; };
+const pad = n => String(n).padStart(2,"0");
+DAY.forEach(d => { d.from = toMin(d.s); d.to = toMin(d.e); d.len = d.to - d.from; });
+
+let off = 0;   // minutes, applied to every time on the page
+
+const clampOff = v => Math.max(MIN_OFF, Math.min(MAX_OFF, Math.round(v / STEP) * STEP));
+const ZERO_POS = (0 - MIN_OFF) / (MAX_OFF - MIN_OFF);   // where 0 sits on the rail
+const start = () => BASE_START + off;
+const end   = () => BASE_END + off;
+
+/* HH:MM; the day never wraps, so the latest possible value is 24:00 */
+const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
+const LUNCH = DAY.find(d => d.k === "lunch");
+const lunchName = () => { const s = LUNCH.from + off; return s >= 630 && s <= 810 ? "午休" : "长休"; };   // 10:30–13:30 start keeps the name
+const nameOf = d => d.k === "lesson" ? "第 " + d.n + " 节" : d.k === "lunch" ? lunchName() : "课间";
+const rangeText = d => clock(d.from + off) + " – " + clock(d.to + off) + " · " + d.len + " 分钟";
+const untilLabel = d => d.k === "lesson" ? "距下课" : "距上课";
+
+function offLabel(){
+  const a = Math.abs(off), h = Math.floor(a / 60), m = a % 60;
+  return (off < 0 ? "−" : off > 0 ? "+" : "") + h + ":" + pad(m);
+}
+function offWords(){
+  if (off === 0) return "与原表一致";
+  const a = Math.abs(off), h = Math.floor(a / 60), m = a % 60;
+  return ("整体" + (off < 0 ? "提前" : "推后") + " " + (h ? h + " 小时 " : "") + (m ? m + " 分钟" : "")).trim();
+}
+
+/* --- ribbon: structure is built once; times are refreshed on every offset change --- */
+const segs = document.getElementById("segs");
+segs.innerHTML = DAY.map((d,i) => {
+  const idx = d.k === "lesson" ? d.n : (d.k === "lunch" ? "—" : "·");
+  return '<li class="seg ' + d.k + '" data-i="' + i + '" style="--min:' + d.len + '">' +
+           '<span class="idx mono">' + idx + '</span>' +
+           '<span class="name">' + nameOf(d) + '</span>' +
+           '<span class="time mono"></span>' +
+         '</li>';
+}).join("");
+const nodes = [...segs.children];
+const timeCells = nodes.map(n => n.querySelector(".time"));
+const axis = document.getElementById("axis");
+
+const lunchNode = nodes[DAY.indexOf(LUNCH)].querySelector(".name");
+const lunchLabels = [...document.querySelectorAll("[data-lunch]")];
+function renderTimes(){
+  DAY.forEach((d, i) => {
+    timeCells[i].textContent = clock(d.from + off) + "–" + clock(d.to + off) + " · " + d.len + "min";
+  });
+  const ln = lunchName();
+  lunchNode.textContent = ln;
+  lunchLabels.forEach(n => { n.textContent = ln + (n.dataset.lunch || ""); });
+  let html = "";
+  for (let h = Math.ceil(start() / 60); h * 60 <= end(); h++){
+    html += '<span class="tick mono" style="--at:' + (h*60 - start()) + '">' + clock(h*60) + '</span>';
+  }
+  axis.innerHTML = html;
+}
+
+/* --- slider ticks: one per hour, labelled every 3 h --- */
+document.querySelector(".track").style.setProperty("--zero", ZERO_POS);
+document.getElementById("ticks").innerHTML = Array.from({length: (MAX_OFF - MIN_OFF) / 60 + 1}, (_, i) => {
+  const h = i + MIN_OFF / 60;
+  const major = h === MIN_OFF / 60 || h === MAX_OFF / 60 || (h % 3 === 0 && h !== -6);
+  const l = h === 0 ? "0" : (h > 0 ? "+" : "−") + Math.abs(h) + "h";
+  const t = clock(BASE_START + h * 60);   // where 第 1 节 would start at this offset
+  return '<i' + (major ? ' class="major' + (h === 0 ? ' zero-tick' : '') + '" data-l="' + l + '" data-t="' + t + '"' : '') + '></i>';
+}).join("");
+
+/* --- offset control --- */
+const el = {
+  shift: document.getElementById("shift"),
+  range: document.getElementById("range"),
+  fill: document.getElementById("fill"),
+  reset: document.getElementById("reset"),
+  minus: document.getElementById("minus"),
+  plus: document.getElementById("plus"),
+  offBig: document.getElementById("offBig"),
+  offCap: document.getElementById("offCap"),
+  roStart: document.getElementById("roStart"),
+  roEnd: document.getElementById("roEnd"),
+  roStartCap: document.getElementById("roStartCap"),
+  roEndCap: document.getElementById("roEndCap"),
+  ledeStart: document.getElementById("ledeStart"),
+  ledeEnd: document.getElementById("ledeEnd"),
+  nowChip: document.getElementById("nowChip"),
+  axisChip: document.getElementById("axisChip"),
+  clock: document.getElementById("clock"),
+  status: document.getElementById("status"),
+  nowName: document.getElementById("nowName"),
+  nowRange: document.getElementById("nowRange"),
+  nowCount: document.getElementById("nowCount"),
+  meter: document.getElementById("meterFill"),
+  nextName: document.getElementById("nextName"),
+  nextRange: document.getElementById("nextRange"),
+  line: document.getElementById("nowline"),
+  pill: document.getElementById("nowpill")
+};
+
+function setOffset(v, persist){
+  off = clampOff(v);
+  el.range.value = off;
+  el.shift.dataset.off = off;
+  el.range.setAttribute("aria-valuetext", offWords());
+
+  // filled portion of the rail, from the zero detent to the thumb
+  const pct = (off - MIN_OFF) / (MAX_OFF - MIN_OFF) * 100, zp = ZERO_POS * 100;
+  const half = "var(--thumb) / 2";
+  const usable = "(100% - var(--thumb))";
+  const lo = Math.min(pct, zp), hi = Math.max(pct, zp);
+  el.fill.style.left  = "calc(" + half + " + " + usable + " * " + (lo / 100) + ")";
+  el.fill.style.width = "calc(" + usable + " * " + ((hi - lo) / 100) + ")";
+
+  el.reset.disabled = off === 0;
+  el.minus.disabled = off <= MIN_OFF;
+  el.plus.disabled  = off >= MAX_OFF;
+
+  el.offBig.textContent = offLabel();
+  el.offCap.textContent = offWords();
+  const arrow = (was, now) => off === 0
+    ? now
+    : '<span class="was">' + was + '</span><span class="arr">→</span>' + now;
+  el.roStart.innerHTML = arrow("07:00", clock(start()));
+  el.roEnd.innerHTML   = arrow("18:00", clock(end()));
+  el.roStartCap.textContent = off === 0 ? "原 07:00" : off === MIN_OFF ? "已到一天最早 · 00:00 – 00:40" : "第 1 节 " + clock(start()) + " – " + clock(start() + 40);
+  el.roEndCap.textContent   = off === 0 ? "原 18:00" : off === MAX_OFF ? "已到一天最晚 · 23:20 – 24:00" : "第 12 节 " + clock(end() - 40) + " – " + clock(end());
+
+  el.ledeStart.textContent = clock(start());
+  el.ledeEnd.textContent = clock(end());
+  const chip = off === 0 ? "" : "含偏移 " + offLabel();
+  el.nowChip.hidden = el.axisChip.hidden = off === 0;
+  el.nowChip.textContent = el.axisChip.textContent = chip;
+
+  renderTimes();
+  tick();
+  if (persist){ try { localStorage.setItem("offsetMin", String(off)); } catch (e) {} }
+}
+
+const HINT = "范围 −7h ～ +6h，整张表始终落在 00:00 – 24:00 之内 · 拖动或用 ← → 键每次 10 分钟 · 双击滑块复位 · 偏移会记住";
+const hintEl = document.getElementById("hint");
+hintEl.textContent = HINT;
+let hintTimer = 0;
+function flash(msg){
+  clearTimeout(hintTimer);
+  hintEl.textContent = msg;
+  hintEl.classList.add("hot");
+  hintTimer = setTimeout(() => { hintEl.textContent = HINT; hintEl.classList.remove("hot"); }, 5000);
+}
+
+/* 从现在开始: offset = how late today already is, rounded up to the next 10 min */
+document.getElementById("startNow").addEventListener("click", () => {
+  const now = new Date();
+  const m = now.getHours() * 60 + now.getMinutes();
+  const want = Math.ceil(m / STEP) * STEP - BASE_START;
+  setOffset(want, true);
+  if (want > MAX_OFF) flash("现在 " + clock(m) + " 开工已塞不下整张表，最晚只能 13:00 开始，已设为 +6:00");
+  else flash("第 1 节对齐到 " + clock(start()) + "，" + offWords());
+  el.range.focus();
+});
+
+el.range.addEventListener("input", () => setOffset(Number(el.range.value), true));
+el.range.addEventListener("dblclick", () => setOffset(0, true));
+el.reset.addEventListener("click", () => { setOffset(0, true); el.range.focus(); });
+el.minus.addEventListener("click", () => setOffset(off - STEP, true));
+el.plus.addEventListener("click", () => setOffset(off + STEP, true));
+
+/* --- live clock --- */
+function countdown(seconds){
+  const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
+  return m >= 60 ? Math.floor(m/60) + " 小时 " + pad(m%60) + " 分" : m + " 分 " + pad(s) + " 秒";
+}
+
+let scrolled = false;
+
+function tick(){
+  const now = new Date();
+  const secs = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
+  const mins = secs / 60;
+  el.clock.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+
+  if (mins >= start() && mins <= end()){
+    el.line.hidden = false;
+    el.line.style.setProperty("--at", (mins - start()).toFixed(2));
+    el.pill.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes());
+  } else {
+    el.line.hidden = true;
+  }
+
+  const ci = DAY.findIndex(d => mins >= d.from + off && mins < d.to + off);
+  nodes.forEach((node, i) => {
+    node.classList.toggle("current", i === ci);
+    node.classList.toggle("past", ci !== -1 && i < ci);
+  });
+
+  if (ci !== -1){
+    const cur = DAY[ci], nxt = DAY[ci+1];
+    el.status.dataset.state = "on";
+    el.nowName.textContent = nameOf(cur);
+    el.nowRange.textContent = rangeText(cur);
+    el.meter.style.width = (((mins - cur.from - off) / cur.len) * 100).toFixed(2) + "%";
+    el.nowCount.textContent = untilLabel(cur) + " " + countdown((cur.to + off) * 60 - secs);
+    el.nextName.textContent = nxt ? nameOf(nxt) : "放学";
+    el.nextRange.textContent = nxt ? rangeText(nxt) : clock(end()) + " 之后自由安排";
+  } else {
+    el.status.dataset.state = "off";
+    el.meter.style.width = "0%";
+    if (mins < start()){
+      el.nowName.textContent = "还没开始";
+      el.nowRange.textContent = "第 1 节 " + clock(start()) + " 打铃";
+      el.nowCount.textContent = "距上课 " + countdown(start() * 60 - secs);
+      el.nextName.textContent = "第 1 节";
+      el.nextRange.textContent = rangeText(DAY[0]);
+    } else {
+      el.nowName.textContent = "今日已放学";
+      el.nowRange.textContent = "第 12 节 " + clock(end()) + " 结束";
+      el.nowCount.textContent = "距明早第 1 节 " + countdown((start() + 1440) * 60 - secs);
+      el.nextName.textContent = "第 1 节";
+      el.nextRange.textContent = rangeText(DAY[0]) + " · 明天";
+    }
+  }
+
+  if (!scrolled){
+    scrolled = true;
+    if (ci !== -1){
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      nodes[ci].scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    }
+  }
+}
+
+/* --- boot: restore a remembered offset, then run --- */
+let saved = 0;
+try { const v = parseInt(localStorage.getItem("offsetMin"), 10); if (Number.isFinite(v)) saved = v; } catch (e) {}
+setOffset(saved, false);
+setInterval(tick, 1000);
+</script>
+</body>
+</html>

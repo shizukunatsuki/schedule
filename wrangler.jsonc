@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "schedule",
+  "compatibility_date": "2026-09-16",
+
+  // Static site: everything under public/ is served by Workers Static Assets.
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+
+  // Only reachable at the custom domain — no workers.dev, no version preview URLs.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "schedule.natsuki.cloud", "custom_domain": true }
+  ],
+
+  "observability": { "enabled": false }
+}
