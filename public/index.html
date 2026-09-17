@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F8F7F9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#262931" media="(prefers-color-scheme: dark)">
-<meta name="description" content="07:00–18:00 的作息时刻表，块高即时长，带实时红线、下课倒计时、整体偏移和可移动的 80 分钟休息。">
+<meta name="description" content="07:00–18:00 的作息时刻表，块高即时长，带实时红线、下课倒计时、整体偏移和可移动的 80 min 休息。">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌸%3C/text%3E%3C/svg%3E">
 <title>一日十二节</title>
@@ -461,7 +461,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
       <p class="today mono" id="today"></p>
     </div>
   </header>
-  <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，六大节、每大节两小节各 40 分钟，节间休息 10 分钟，<span id="ledeLunch">其中一段休息 80 分钟</span>，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
+  <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，六大节、每大节两小节各 40 min，节间休息 10 min，<span id="ledeLunch">其中一段休息 80 min</span>，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
 
   <section class="now panel" id="status">
     <div class="now-head">
@@ -490,16 +490,16 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
       </div>
       <div class="set-body">
         <div class="slider-row">
-          <button class="nudge" id="minus" type="button" aria-label="提前 10 分钟">−</button>
+          <button class="nudge" id="minus" type="button" aria-label="提前 10 min">−</button>
           <div class="track">
             <div class="rail"></div>
             <div class="fill" id="fill"></div>
             <div class="zero"></div>
                         <div class="ticks" id="ticks" aria-hidden="true"></div>
             <input class="range" id="range" type="range" min="-420" max="360" step="10" value="0"
-                   aria-label="整体偏移，最早提前 7 小时到 00:00 开始，最晚推到当天 24:00 结束，步长 10 分钟" aria-valuetext="与原表一致">
+                   aria-label="整体偏移，最早提前 7 h 到 00:00 开始，最晚推到当天 24:00 结束，步长 10 min" aria-valuetext="与原表一致">
           </div>
-          <button class="nudge" id="plus" type="button" aria-label="推后 10 分钟">+</button>
+          <button class="nudge" id="plus" type="button" aria-label="推后 10 min">+</button>
         </div>
         <p class="set-read" id="offRead"></p>
       </div>
@@ -507,28 +507,28 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 
     <div class="set-row">
       <div class="set-label">
-        <p class="plabel">80 分钟休息</p>
+        <p class="plabel">80 min 休息</p>
         <p class="set-val pos serif" id="lunchBig">第 6 节后</p>
         <button class="minireset" id="lunchReset" type="button" disabled>复位到第 6 节后</button>
       </div>
       <div class="set-body">
-        <div class="strip" id="strip" role="radiogroup" aria-label="80 分钟休息放在哪一大节之后，或不放"></div>
+        <div class="strip" id="strip" role="radiogroup" aria-label="80 min 休息放在哪一大节之后，或不放"></div>
         <p class="set-read" id="lunchRead"></p>
       </div>
     </div>
 
     <div class="set-foot">
       <div class="foot" id="foot">
-        <p class="hint">整张表始终落在 00:00 – 24:00 内 · 选「无」则不放长休息、全天缩短 80 分钟 · 大节（两小节连上）不拆开<span class="kbd"> · 滑块 ← → 每次 10 分钟，双击复位 · 空位 ← → 移一大节</span> · 设置会记住</p>
+        <p class="hint">整张表始终落在 00:00 – 24:00 内 · 选「无」则不放长休息、全天缩短 80 min · 大节（两小节连上）不拆开<span class="kbd"> · 滑块 ← → 每次 10 min，双击复位 · 空位 ← → 移一大节</span> · 设置会记住</p>
         <p class="flash" id="flash" aria-live="polite"></p>
       </div>
-      <button class="btn" id="startNow" type="button" title="把开始时间对齐到现在（取整到 10 分钟）">从现在开始</button>
+      <button class="btn" id="startNow" type="button" title="把开始时间对齐到现在（取整到 10 min）">从现在开始</button>
     </div>
   </section>
   <dl class="tally panel">
-    <div><dt>全天</dt><dd class="mono" id="tallyAll">11 小时</dd></div>
-    <div><dt>在课</dt><dd class="mono">8 小时</dd></div>
-    <div><dt>休息</dt><dd class="mono" id="tallyRest">180 分钟</dd></div>
+    <div><dt>全天</dt><dd class="mono" id="tallyAll">11 h</dd></div>
+    <div><dt>在课</dt><dd class="mono">8 h</dd></div>
+    <div><dt>休息</dt><dd class="mono" id="tallyRest">180 min</dd></div>
     <div><dt>休息次数</dt><dd class="mono" id="tallyCount">11 次</dd></div>
   </dl>
   <p class="note">红线随本机时间移动 · 上课时段自动高亮 · 每段时长不随偏移或休息位置改变</p>
@@ -536,9 +536,9 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 
 <div class="pane main">
   <div class="legend">
-    <span class="key"><span class="dot lesson"></span>上课 40 分钟</span>
-    <span class="key"><span class="dot rest"></span>休息 10 分钟</span>
-    <span class="key"><span class="dot lunch"></span>休息 80 分钟</span>
+    <span class="key"><span class="dot lesson"></span>上课 40 min</span>
+    <span class="key"><span class="dot rest"></span>休息 10 min</span>
+    <span class="key"><span class="dot lunch"></span>休息 80 min</span>
     <span class="key spinekey"><i></i>一大节 = 两小节</span>
     <span class="legend-chips">
       <span class="chip mono" id="axisChip" hidden></span>
@@ -596,7 +596,7 @@ const lunchSeg = () => DAY.find(d => d.k === "lunch");
 
 const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
 const nameOf = d => d.k === "lesson" ? "第 " + d.n + " 节" : "休息";
-const rangeText = d => clock(d.from + off) + " – " + clock(d.to + off) + " · " + d.len + " 分钟";
+const rangeText = d => clock(d.from + off) + " – " + clock(d.to + off) + " · " + d.len + " min";
 const untilLabel = d => d.k === "lesson" ? "距下课" : "距上课";
 const CN = ["一","二","三","四","五","六"];
 
@@ -607,7 +607,7 @@ function offLabel(){
 function offWords(){
   if (off === 0) return "与原表一致";
   const a = Math.abs(off), h = Math.floor(a / 60), m = a % 60;
-  return ("整体" + (off < 0 ? "提前" : "推后") + " " + (h ? h + " 小时 " : "") + (m ? m + " 分钟" : "")).trim();
+  return ("整体" + (off < 0 ? "提前" : "推后") + " " + (h ? h + " h " : "") + (m ? m + " min" : "")).trim();
 }
 const whereText = () => lunchAfter === 0 ? "无" : "第 " + (2 * lunchAfter) + " 节后";
 const SLOTS = [1, 2, 3, 4, 5, 0];   // keyboard order across the strip: five gaps, then "无"
@@ -674,7 +674,7 @@ function renderRibbon(){
 
 function renderTimes(){
   DAY.forEach((d, i) => {
-    timeCells[i].textContent = clock(d.from + off) + "–" + clock(d.to + off) + " · " + d.len + " 分钟";
+    timeCells[i].textContent = clock(d.from + off) + "–" + clock(d.to + off) + " · " + d.len + " min";
   });
   // daylight stops along the axis: dawn 05:30 → full day 09:00–15:30 → dusk 18:30 → night 21:00
   const span = end() - start();
@@ -777,7 +777,7 @@ el.plus.addEventListener("click", () => setOffset(off + STEP, true));
 function gapHTML(pos){
   const on = pos === lunchAfter;
   const none = pos === 0;
-  const label = none ? "不放 80 分钟休息，全天缩短 80 分钟" : "80 分钟休息放在第 " + (2*pos) + " 节后";
+  const label = none ? "不放 80 min 休息，全天缩短 80 min" : "80 min 休息放在第 " + (2*pos) + " 节后";
   return '<button class="gap' + (none ? " none" : "") + (on ? " on" : "") + '" type="button" role="radio" data-pos="' + pos + '"' +
          ' aria-checked="' + on + '" aria-label="' + label + '" tabindex="' + (on ? 0 : -1) + '">' +
          '<span>' + (none ? "无" : "休息") + '</span></button>';
@@ -803,16 +803,16 @@ function renderLunchRead(){
       it("前 " + after + " 节 / 后 " + (12 - after) + " 节");
   } else {
     el.lunchRead.innerHTML =
-      it("不放长休息") + sep + it("全天缩短 <b>80 分钟</b>，<b>" + clock(end()) + "</b> 收尾") + sep + it("第 1–12 节连上");
+      it("不放长休息") + sep + it("全天缩短 <b>80 min</b>，<b>" + clock(end()) + "</b> 收尾") + sep + it("第 1–12 节连上");
   }
   el.lunchChip.hidden = d === 0;
   el.lunchChip.textContent = L ? "休息 · " + whereText() : "无长休息";
-  el.ledeLunch.textContent = L ? "其中一段休息 80 分钟" : "不设长休息";
+  el.ledeLunch.textContent = L ? "其中一段休息 80 min" : "不设长休息";
 
   const breaks = DAY.filter(x => x.k !== "lesson");
   const total = dayEnd() - BASE_START;
-  el.tallyAll.textContent = Math.floor(total / 60) + " 小时" + (total % 60 ? " " + (total % 60) + " 分" : "");
-  el.tallyRest.textContent = breaks.reduce((a, x) => a + x.len, 0) + " 分钟";
+  el.tallyAll.textContent = Math.floor(total / 60) + " h" + (total % 60 ? " " + (total % 60) + " min" : "");
+  el.tallyRest.textContent = breaks.reduce((a, x) => a + x.len, 0) + " min";
   el.tallyCount.textContent = breaks.length + " 次";
 }
 function setLunch(pos, persist){
@@ -849,7 +849,7 @@ el.lunchReset.addEventListener("click", () => { setLunch(LUNCH_DEFAULT, true); f
 /* ---------- live clock ---------- */
 function countdown(seconds){
   const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
-  return m >= 60 ? Math.floor(m/60) + " 小时 " + pad(m%60) + " 分" : m + " 分 " + pad(s) + " 秒";
+  return m >= 60 ? Math.floor(m/60) + " h " + pad(m%60) + " min" : m + " min " + pad(s) + " s";
 }
 const WD = ["日","一","二","三","四","五","六"];
 let scrolled = false;
