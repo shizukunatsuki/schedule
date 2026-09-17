@@ -213,8 +213,8 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,36px);line-height:1.15;le
 .rail{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(10px + 14px);height:3px;border-radius:2px;background:var(--hair);opacity:.5}
 .fill{position:absolute;top:calc(10px + 13px);height:5px;border-radius:3px;background:var(--pink-mark);left:50%;width:0}
 .zero{position:absolute;left:calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--zero));top:calc(10px + 8px);width:2px;height:15px;border-radius:1px;background:var(--muted);transform:translateX(-50%)}
-.ticks{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(10px + 23px);height:16px;display:flex;justify-content:space-between}
-.ticks i{position:relative;width:1px;height:4px;background:var(--hair);display:block}
+.ticks{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(10px + 23px);height:16px}
+.ticks i{position:absolute;top:0;left:var(--x);transform:translateX(-50%);width:1px;height:4px;background:var(--hair);display:block}
 .ticks i.major{height:7px;background:var(--muted)}
 .ticks i.major::before,.ticks i.major::after{position:absolute;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap}
 .ticks i.major::before{content:attr(data-l);top:9px;color:var(--muted);font-weight:600}
@@ -395,7 +395,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,36px);line-height:1.15;le
   .tally{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:420px){
-  .ticks i.major:not(.zero-tick):not(:first-child):not(:last-child)::after{content:none}
+  .ticks i.major:not(.zero-tick):not(.end)::after{content:none}
   .gap{flex-basis:20px}
   .gap.on{flex-basis:44px}
   .blk b{font-size:12px}
@@ -482,7 +482,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,36px);line-height:1.15;le
             <div class="zero"></div>
                         <div class="ticks" id="ticks" aria-hidden="true"></div>
             <input class="range" id="range" type="range" min="-420" max="360" step="10" value="0"
-                   aria-label="整体偏移，最早提前 7 小时到 00:00 开始，最晚推后 6 小时到 24:00 结束，步长 10 分钟" aria-valuetext="与原表一致">
+                   aria-label="整体偏移，最早提前 7 小时到 00:00 开始，最晚推到当天 24:00 结束，步长 10 分钟" aria-valuetext="与原表一致">
           </div>
           <button class="nudge" id="plus" type="button" aria-label="推后 10 分钟">+</button>
         </div>
@@ -544,7 +544,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,36px);line-height:1.15;le
 
 <script>
 const BASE_START = 420;                    // 07:00 before any offset; the end depends on where the 80-min break sits
-const STEP = 10, MIN_OFF = -420, MAX_OFF = 360;   // −7 h puts the table at 00:00; +6 h is the slider's far end
+const STEP = 10, MIN_OFF = -420;   // −7 h puts the table at 00:00; the ceiling is whatever keeps the end ≤ 24:00
 const pad = n => String(n).padStart(2,"0");
 
 /* The day is 6 大节 (two 40-min 小节 joined by a 10-min break). Between 大节 there is a 10-min break,
@@ -570,8 +570,9 @@ let off = 0;   // minutes, applied to every time on the page
 
 const dayEnd = () => DAY[DAY.length - 1].to;
 const maxOff = () => 1440 - dayEnd();
-const clampOff = v => Math.max(MIN_OFF, Math.min(MAX_OFF, maxOff(), Math.round(v / STEP) * STEP));
-const ZERO_POS = (0 - MIN_OFF) / (MAX_OFF - MIN_OFF);
+const clampOff = v => Math.max(MIN_OFF, Math.min(maxOff(), Math.round(v / STEP) * STEP));
+const zeroPos = () => (0 - MIN_OFF) / (maxOff() - MIN_OFF);
+const spanPos = m => (m - MIN_OFF) / (maxOff() - MIN_OFF);
 const start = () => BASE_START + off;
 const end   = () => dayEnd() + off;
 const firstLesson = () => DAY.find(d => d.k === "lesson");
@@ -602,7 +603,7 @@ const el = {
   clock: $("clock"), today: $("today"), ledeStart: $("ledeStart"), ledeEnd: $("ledeEnd"), ledeLunch: $("ledeLunch"),
   status: $("status"), nowChip: $("nowChip"), nowCount: $("nowCount"), nowName: $("nowName"), nowRange: $("nowRange"),
   meter: $("meterFill"), overview: $("overview"), nextName: $("nextName"), nextRange: $("nextRange"),
-  settings: $("settings"), range: $("range"), fill: $("fill"), minus: $("minus"), plus: $("plus"),
+  settings: $("settings"), range: $("range"), fill: $("fill"), ticks: $("ticks"), minus: $("minus"), plus: $("plus"),
   offBig: $("offBig"), offRead: $("offRead"), offReset: $("offReset"),
   lunchBig: $("lunchBig"), lunchRead: $("lunchRead"), lunchReset: $("lunchReset"), strip: $("strip"),
   startNow: $("startNow"), foot: $("foot"), flash: $("flash"),
@@ -667,15 +668,24 @@ function renderTimes(){
   el.axis.innerHTML = html;
 }
 
-/* ---------- slider ticks (fixed geometry: −7 h … +6 h) ---------- */
-document.querySelector(".track").style.setProperty("--zero", ZERO_POS);
-$("ticks").innerHTML = Array.from({ length: (MAX_OFF - MIN_OFF) / 60 + 1 }, (_, i) => {
-  const h = i + MIN_OFF / 60;
-  const major = h === MIN_OFF / 60 || h === MAX_OFF / 60 || (h % 3 === 0 && h !== -6);
-  const l = h === 0 ? "0" : (h > 0 ? "+" : "−") + Math.abs(h) + "h";
-  const t = clock(BASE_START + h * 60);
-  return '<i' + (major ? ' class="major' + (h === 0 ? ' zero-tick' : '') + '" data-l="' + l + '" data-t="' + t + '"' : '') + '></i>';
-}).join("");
+/* ---------- slider scale: −7 h … the ceiling for the current day length; a tick per hour,
+   labels at both ends, at 0 and every 3 h (a 3 h label within 90 min of an end is dropped) ---------- */
+const offText = m => m === 0 ? "0" : (m < 0 ? "−" : "+") + Math.floor(Math.abs(m) / 60) + (Math.abs(m) % 60 ? ":" + pad(Math.abs(m) % 60) : "h");
+function renderTicks(){
+  const max = maxOff();
+  document.querySelector(".track").style.setProperty("--zero", zeroPos());
+  el.range.max = max;
+  const marks = [];
+  for (let m = MIN_OFF; m <= max; m += 60) marks.push(m);
+  if (max % 60) marks.push(max);
+  el.ticks.innerHTML = marks.map(m => {
+    const end = m === MIN_OFF || m === max;
+    const major = end || (m % 180 === 0 && Math.min(m - MIN_OFF, max - m) >= 90);
+    const cls = (major ? "major" : "") + (m === 0 ? " zero-tick" : "") + (end ? " end" : "");
+    return '<i class="' + cls.trim() + '" style="--x:' + (spanPos(m) * 100).toFixed(3) + '%"' +
+           (major ? ' data-l="' + offText(m) + '" data-t="' + clock(BASE_START + m) + '"' : '') + '></i>';
+  }).join("");
+}
 
 /* ---------- offset ---------- */
 function setOffset(v, persist){
@@ -685,7 +695,7 @@ function setOffset(v, persist){
   el.range.setAttribute("aria-valuetext", offWords());
 
   const usable = "(100% - var(--thumb))", half = "var(--thumb) / 2";
-  const pct = (off - MIN_OFF) / (MAX_OFF - MIN_OFF) * 100, zp = ZERO_POS * 100;
+  const pct = spanPos(off) * 100, zp = zeroPos() * 100;
   const lo = Math.min(pct, zp), hi = Math.max(pct, zp);
   el.fill.style.left  = "calc(" + half + " + " + usable + " * " + (lo / 100) + ")";
   el.fill.style.width = "calc(" + usable + " * " + ((hi - lo) / 100) + ")";
@@ -792,6 +802,7 @@ function setLunch(pos, persist){
   el.ribbon.style.setProperty("--total", dayEnd() - BASE_START);
   renderRibbon();
   renderStrip();
+  renderTicks();
   setOffset(off, false);   // re-clamps to the (possibly shorter) day and refreshes every readout
   if (persist){ try { localStorage.setItem("lunchAfter", String(pos)); } catch (e) {} }
 }
