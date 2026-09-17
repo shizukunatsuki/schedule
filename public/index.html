@@ -28,7 +28,7 @@
   --faint:#6E6878;
   --hair:#8F8899;
   --line:#E9E4EC;
-  --pink:#A8416A;    --pink-mark:#CC6A8E;   --pink-soft:#FCE6ED;
+  --pink:#A8416A;    --pink-mark:#CC6A8E;   --pink-soft:#FCE6ED;   --pink-deep:#8F345A;  --pink-fill:#F5CCDA;
   --sky:#3D6E97;     --sky-mark:#5590C2;    --sky-soft:#E2EFF9;
   --grass:#4C7541;   --grass-mark:#6BA254;  --grass-soft:#E8F3E1;
   --shadow:120,90,110;
@@ -57,7 +57,7 @@
     --faint:#B9B2C0;
     --hair:#7F7A88;
     --line:#3E424C;
-    --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;
+    --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;   --pink-deep:#F2B3C6;  --pink-fill:#5E3C4A;
     --sky:#A9CBEA;     --sky-mark:#7FB0DC;    --sky-soft:#25384A;
     --grass:#B9DBA7;   --grass-mark:#8FC077;  --grass-soft:#2B3D27;
     --shadow:0,0,0;
@@ -76,7 +76,7 @@
   --faint:#B9B2C0;
   --hair:#7F7A88;
   --line:#3E424C;
-  --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;
+  --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;   --pink-deep:#F2B3C6;  --pink-fill:#5E3C4A;
   --sky:#A9CBEA;     --sky-mark:#7FB0DC;    --sky-soft:#25384A;
   --grass:#B9DBA7;   --grass-mark:#8FC077;  --grass-soft:#2B3D27;
   --shadow:0,0,0;
@@ -343,17 +343,15 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 .seg.past .name{font-weight:500;color:var(--muted)}
 .seg.past .idx,.seg.past .time{color:var(--faint)}
 .seg.rest.past{--row-bg:var(--sunk);background:var(--sunk)}
-.seg.current{--row-bg:var(--pink-soft);background:var(--pink-soft);box-shadow:inset 0 1px 0 var(--pink-mark),inset 0 -1px 0 var(--pink-mark)}
+/* the current row fills from the top as time passes; the fill's edge is "now", so nothing crosses the text */
+.seg.current{--row-bg:var(--pink-soft);background:linear-gradient(to bottom, var(--pink-fill) 0 var(--prog, 0%), var(--pink-soft) var(--prog, 0%) 100%)}
 .seg:first-child{border-radius:var(--r-lg) var(--r-lg) 0 0}
-.seg:first-child.current{box-shadow:inset 0 -1px 0 var(--pink-mark)}
 .seg:last-child{border-radius:0 0 var(--r-lg) var(--r-lg);border-bottom:0}
-.seg:last-child.current{box-shadow:inset 0 1px 0 var(--pink-mark)}
-/* text sits above the now-line and carries a halo in the row colour, so the line passes behind the glyphs */
-.seg > span{position:relative;z-index:5;text-shadow:0 1px 0 var(--row-bg),0 -1px 0 var(--row-bg),1px 0 0 var(--row-bg),-1px 0 0 var(--row-bg),0 2px 0 var(--row-bg),0 -2px 0 var(--row-bg)}
-.seg.current .name{color:var(--pink)}
-.seg.current .idx,.seg.current .time{color:var(--pink)}
+.seg.current .name{color:var(--pink-deep)}
+.seg.current .idx,.seg.current .time{color:var(--pink-deep)}
 
-.nowline{position:absolute;left:0;right:0;top:calc(var(--at) * var(--ppm));height:0;border-top:2px solid var(--pink-mark);z-index:4;pointer-events:none}
+.nowline{position:absolute;left:0;width:calc(var(--gutter) + var(--spine));top:calc(var(--at) * var(--ppm));height:0;border-top:2px solid var(--pink-mark);z-index:4;pointer-events:none}
+.nowline::after{content:"";position:absolute;right:-1px;top:-5px;border:4px solid transparent;border-left:5px solid var(--pink-mark);border-right:0}
 .nowline[hidden]{display:none}
 .nowpill{position:absolute;left:0;top:50%;transform:translateY(-50%);background:var(--pink);color:var(--surface);border-radius:999px;font-size:var(--fs-caption);font-weight:600;padding:2px 8px}
 
@@ -542,7 +540,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
     <div><dt>休息</dt><dd class="mono" id="tallyRest">180 min</dd></div>
     <div><dt>休息次数</dt><dd class="mono" id="tallyCount">11 次</dd></div>
   </dl>
-  <p class="note">红线随本机时间移动 · 上课时段自动高亮 · 每段时长不随偏移或休息位置改变</p>
+  <p class="note">时刻线随本机时间移动 · 当前一段随进度填色 · 每段时长不随偏移或休息位置改变</p>
 </div>
 
 <div class="pane main">
@@ -889,6 +887,8 @@ function tick(){
   const ci = DAY.findIndex(d => mins >= d.from + off && mins < d.to + off);
   const cb = ci === -1 ? 0 : DAY[ci].blk;
   nodes.forEach((node, i) => {
+    if (i === ci) node.style.setProperty("--prog", (((mins - DAY[ci].from - off) / DAY[ci].len) * 100).toFixed(2) + "%");
+    else node.style.removeProperty("--prog");
     node.classList.toggle("current", i === ci);
     node.classList.toggle("past", ci !== -1 && i < ci);
     ovSegs[i].classList.toggle("current", i === ci);
