@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F1F3EE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F1310" media="(prefers-color-scheme: dark)">
-<meta name="description" content="07:00–18:00 的作息时刻表，块高即时长，带实时红线、下课倒计时和 −7h～+6h 整体偏移。">
+<meta name="description" content="07:00–18:00 的作息时刻表，块高即时长，带实时红线、下课倒计时、整体偏移和可移动的 80 分钟休息。">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔔%3C/text%3E%3C/svg%3E">
 <title>一日十二节</title>
@@ -31,6 +31,7 @@
   --accent-soft:#F6E1D9;
   --ppm:1.9px;
   --gutter:56px;
+  --spine:28px;
   --thumb:18px;
 }
 @media (prefers-color-scheme: dark){
@@ -77,64 +78,103 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 .mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
-.wrap{max-width:760px;margin:0 auto;padding:40px 20px 72px}
+.serif{font-family:"Noto Serif SC",Georgia,serif;font-weight:700}
+.wrap{max-width:760px;margin:0 auto;padding:36px 20px 72px}
 button{font:inherit;color:inherit}
+.plabel{margin:0;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
+.panel{background:var(--surface);border:1px solid var(--line)}
 
 /* ---------- masthead ---------- */
-.masthead{display:flex;flex-direction:column;gap:10px;padding-bottom:26px;border-bottom:1px solid var(--line)}
-.eyebrow{margin:0;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-family:"IBM Plex Mono",monospace}
-h1{
-  margin:0;
-  font-family:"Noto Serif SC",Georgia,serif;
-  font-weight:700;
-  font-size:clamp(34px,7vw,46px);
-  line-height:1.1;
-  letter-spacing:.04em;
-  text-wrap:balance;
-}
-.lede{margin:0;color:var(--muted);font-size:14px}
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.eyebrow{margin:0 0 6px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+h1{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:clamp(32px,7vw,44px);line-height:1.05;letter-spacing:.04em}
+.clockbox{text-align:right;flex:none}
+.livetime{margin:0;font-size:26px;line-height:1;letter-spacing:.04em;color:var(--ink)}
+.today{margin:6px 0 0;font-size:11px;letter-spacing:.14em;color:var(--faint)}
+.lede{margin:14px 0 0;color:var(--muted);font-size:14px}
 .lede .mono{color:var(--ink)}
-.livetime{margin:0;font-size:13px;color:var(--faint);letter-spacing:.06em}
 
-/* ---------- offset control ---------- */
-.shift{
-  margin:26px 0 0;
-  background:var(--surface);
-  border:1px solid var(--line);
-  padding:18px 22px 20px;
-  display:flex;flex-direction:column;gap:14px;
-}
-.shift-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.shift-actions{display:flex;gap:8px}
-.shift-title{margin:0;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
-.reset{
-  background:none;border:1px solid var(--line);padding:3px 10px;font-size:12px;letter-spacing:.08em;
-  color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s,opacity .15s;
-}
-.reset:hover{color:var(--accent);border-color:var(--accent)}
-.reset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.reset[disabled]{opacity:.35;cursor:default;pointer-events:none}
-.reset.primary{color:var(--accent);border-color:var(--accent)}
-.reset.primary:hover{background:var(--accent-soft)}
+/* ---------- now card ---------- */
+.now{margin:20px 0 12px;padding:16px 22px 16px;display:flex;flex-direction:column;gap:10px}
+.now-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.pcount{margin:0;font-size:13px;color:var(--accent);letter-spacing:.04em;white-space:nowrap}
+.now-main{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.pname{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:30px;line-height:1.15}
+.prange{margin:0;font-size:13px;color:var(--muted);letter-spacing:.04em}
+.meter{height:3px;background:var(--sunk);overflow:hidden}
+.meter span{display:block;height:100%;width:0;background:var(--accent);transition:width .9s linear}
+.now[data-state="off"] .meter{visibility:hidden}
 
+.overview{position:relative;display:flex;gap:3px;margin-top:4px}
+.ov-col{display:flex;flex-direction:column;min-width:0}
+.ov-bar{display:flex;gap:1px;height:12px}
+.ov-seg{flex:1 1 0;min-width:0;background:var(--line);transition:background .3s,opacity .3s}
+.ov-seg.lesson{background:var(--pine)}
+.ov-seg.lunch{background:var(--amber)}
+.ov-seg.past{opacity:.35}
+.ov-seg.current{background:var(--accent)}
+.ov-num{height:16px;line-height:16px;text-align:center;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:10.5px;color:var(--faint);letter-spacing:.06em}
+.ov-col.group .ov-num{color:var(--pine)}
+.ov-col.group.current .ov-num{color:var(--accent)}
+.ov-now{position:absolute;top:-4px;width:2px;height:20px;background:var(--accent);transform:translateX(-50%);pointer-events:none}
+.ov-now[hidden]{display:none}
+.next{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.nname{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:17px}
+
+/* ---------- settings ---------- */
+.settings{padding:0 22px 14px;display:flex;flex-direction:column}
+.set-row{display:grid;grid-template-columns:128px 1fr;gap:18px;padding:16px 0 14px;border-bottom:1px solid var(--line);align-items:start}
+.set-label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.set-val{margin:0;font-size:22px;line-height:1.2;letter-spacing:.02em;white-space:nowrap;color:var(--muted);transition:color .2s}
+.set-val.serif{font-size:18px}
+.settings:not([data-off="0"]) .set-val.off{color:var(--accent)}
+.settings:not([data-pos="3"]) .set-val.pos{color:var(--amber)}
+.minireset{
+  align-self:flex-start;margin-top:2px;padding:0;border:0;background:none;cursor:pointer;
+  font-size:11.5px;letter-spacing:.06em;color:var(--muted);border-bottom:1px dotted var(--faint);line-height:1.4;
+  transition:color .15s,opacity .15s;
+}
+.minireset:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.minireset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.minireset[disabled]{opacity:0;pointer-events:none}
+.set-body{min-width:0}
+.set-read{margin:6px 0 0;font-size:12.5px;color:var(--muted);letter-spacing:.02em;line-height:1.7}
+.set-read b{font-weight:500;color:var(--ink)}
+.set-read .was{color:var(--faint)}
+.set-read .arr{color:var(--faint);margin:0 4px}
+.set-read .sep{color:var(--line);margin:0 6px}
+.set-read .it{white-space:nowrap}
+.set-foot{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-top:12px}
+.foot{position:relative;flex:1 1 auto;min-width:0}
+.hint{margin:0;font-size:11.5px;color:var(--faint);letter-spacing:.04em;transition:opacity .25s}
+.flash{position:absolute;inset:0;margin:0;font-size:12px;color:var(--accent);letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .25s}
+.foot.hot .hint{opacity:0}
+.foot.hot .flash{opacity:1}
+.btn{
+  flex:none;background:none;border:1px solid var(--accent);color:var(--accent);padding:4px 12px;font-size:12px;letter-spacing:.08em;cursor:pointer;
+  transition:background .15s;
+}
+.btn:hover{background:var(--accent-soft)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* slider */
 .slider-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
 .nudge{
-  width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+  width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
   display:grid;place-items:center;cursor:pointer;color:var(--muted);
-  font-family:"IBM Plex Mono",monospace;font-size:16px;line-height:1;
+  font-family:"IBM Plex Mono",monospace;font-size:15px;line-height:1;
   transition:color .15s,border-color .15s,background .15s,opacity .15s;
 }
 .nudge:hover{color:var(--accent);border-color:var(--accent)}
 .nudge:active{background:var(--accent-soft)}
 .nudge:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .nudge[disabled]{opacity:.3;cursor:default;pointer-events:none}
-
-.track{position:relative;padding:12px 0 34px;--zero:0.5}
-.rail{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(12px + 14px);height:2px;background:var(--line)}
-.fill{position:absolute;top:calc(12px + 13px);height:4px;background:var(--accent);left:50%;width:0;transition:none}
-.zero{position:absolute;left:calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--zero));top:calc(12px + 8px);width:1px;height:14px;background:var(--faint);transform:translateX(-50%)}
-.dead{position:absolute;top:calc(12px + 14px);height:2px;right:calc(var(--thumb)/2);width:0;background:repeating-linear-gradient(90deg,var(--faint) 0 2px,transparent 2px 5px);opacity:.7}
-.ticks{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(12px + 22px);height:16px;display:flex;justify-content:space-between}
+.track{position:relative;padding:10px 0 34px;--zero:0.5}
+.rail{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(10px + 14px);height:2px;background:var(--line)}
+.fill{position:absolute;top:calc(10px + 13px);height:4px;background:var(--accent);left:50%;width:0}
+.zero{position:absolute;left:calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--zero));top:calc(10px + 8px);width:1px;height:14px;background:var(--faint);transform:translateX(-50%)}
+.dead{position:absolute;top:calc(10px + 14px);height:2px;right:calc(var(--thumb)/2);width:0;background:repeating-linear-gradient(90deg,var(--faint) 0 2px,transparent 2px 5px);opacity:.7}
+.ticks{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(10px + 22px);height:16px;display:flex;justify-content:space-between}
 .ticks i{position:relative;width:1px;height:4px;background:var(--line);display:block}
 .ticks i.major{height:7px;background:var(--faint)}
 .ticks i.major::before,.ticks i.major::after{
@@ -164,38 +204,21 @@ h1{
 }
 .range:focus-visible::-moz-range-thumb{box-shadow:0 0 0 1.5px var(--accent),0 0 0 6px var(--accent-soft)}
 
-.readouts{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
-.ro{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden}
-.ro-l{margin:0;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
-.ro-v{margin:0;font-size:22px;line-height:1.25;letter-spacing:.02em;white-space:nowrap}
-.ro-v .was{color:var(--faint);font-size:15px}
-.ro-v .arr{color:var(--faint);font-size:14px;margin:0 6px}
-.ro-c{margin:0;font-size:12px;color:var(--muted);letter-spacing:.03em;min-height:1.6em}
-#shift[data-off="0"] .ro-v.big{color:var(--muted)}
-#shift:not([data-off="0"]) .ro-v.big{color:var(--accent)}
-.hint{margin:0;font-size:11.5px;color:var(--faint);letter-spacing:.04em}
-.foot{position:relative}
-.foot .hint{transition:opacity .25s}
-.flash{position:absolute;inset:0;margin:0;font-size:12px;color:var(--accent);letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .25s}
-.foot.hot .hint{opacity:0}
-.foot.hot .flash{opacity:1}
-
-/* ---------- long-break position ---------- */
-.lunchpos{margin-top:12px}
-.strip{display:flex;align-items:stretch;height:52px;gap:0}
+/* break-position strip */
+.strip{display:flex;align-items:stretch;height:46px}
 .blk{
-  flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
   background:var(--pine-soft);color:var(--pine);border:1px solid var(--line);border-left:0;
 }
 .strip > :first-child{border-left:1px solid var(--line)}
-.blk b{font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:16px;line-height:1.1}
-.blk small{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;opacity:.8}
+.blk b{font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:15px;line-height:1.1}
+.blk small{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.06em;opacity:.8}
 .gap{
   flex:0 0 22px;position:relative;margin:0;padding:0;background:var(--sunk);cursor:pointer;
   border:1px solid var(--line);border-left:0;
   transition:flex-basis .25s ease,background .15s ease;
 }
-.gap::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:0;border-left:1px dotted var(--faint);transform:translateX(-50%);transition:opacity .15s}
+.gap::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:0;border-left:1px dotted var(--faint);transform:translateX(-50%)}
 .gap:hover{background:var(--amber-soft)}
 .gap:hover::before{border-left-style:solid;border-color:var(--amber)}
 .gap:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;z-index:1}
@@ -203,50 +226,46 @@ h1{
 .gap.on{flex-basis:72px;background:var(--amber-soft);cursor:default}
 .gap.on::before{opacity:0}
 .gap.on span{opacity:1}
-.readouts.two{grid-template-columns:1fr 1fr}
-.lunchpos[data-pos="3"] .ro-v.big{color:var(--muted)}
-.lunchpos:not([data-pos="3"]) .ro-v.big{color:var(--amber)}
 
 .chip{
   display:inline-block;vertical-align:middle;margin-left:8px;padding:1px 7px;
   font-size:10px;letter-spacing:.1em;text-transform:none;
   background:var(--accent-soft);color:var(--accent);border-radius:2px;
 }
+.chip.amber{background:var(--amber-soft);color:var(--amber)}
 .chip[hidden]{display:none}
 
-/* ---------- status ---------- */
-.status{
-  margin:18px 0 34px;
-  background:var(--surface);
-  border:1px solid var(--line);
-  display:grid;
-  grid-template-columns:1.35fr 1fr;
-}
-.panel{padding:20px 22px;display:flex;flex-direction:column;gap:7px;min-width:0}
-.panel + .panel{border-left:1px solid var(--line)}
-.plabel{margin:0;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
-.pname{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:27px;line-height:1.2}
-.pname.small{font-size:20px}
-.prange{margin:0;font-size:13px;color:var(--muted);letter-spacing:.04em}
-.meter{height:3px;background:var(--sunk);margin-top:6px;overflow:hidden}
-.meter span{display:block;height:100%;width:0;background:var(--accent);transition:width .9s linear}
-.pcount{margin:0;font-size:13px;color:var(--accent);letter-spacing:.04em}
-.status[data-state="off"] .meter{visibility:hidden}
-
 /* ---------- ribbon ---------- */
-.legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:11.5px;color:var(--muted)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:30px 0 14px;font-size:11.5px;color:var(--muted)}
 .key{display:inline-flex;align-items:center;gap:7px}
 .dot{width:9px;height:9px;flex:none}
 .dot.lesson{background:var(--pine)}
 .dot.rest{background:var(--line)}
 .dot.lunch{background:var(--amber)}
+.key.spinekey i{display:inline-block;width:2px;height:12px;background:var(--pine)}
 .legend-chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .legend-chips .chip{margin-left:0}
 
-.ribbon{position:relative;display:grid;grid-template-columns:var(--gutter) 1fr;height:calc(var(--total, 660) * var(--ppm))}
+.ribbon{position:relative;display:grid;grid-template-columns:var(--gutter) var(--spine) 1fr;height:calc(var(--total, 660) * var(--ppm))}
 .axis{position:relative;border-right:1px solid var(--line)}
 .tick{position:absolute;right:0;top:calc(var(--at) * var(--ppm));transform:translateY(-50%);padding-right:12px;font-size:11px;color:var(--faint);letter-spacing:.04em}
 .tick::after{content:"";position:absolute;right:-1px;top:50%;width:5px;height:1px;background:var(--line)}
+
+.spines{position:relative}
+.spine{
+  position:absolute;left:0;right:0;top:calc(var(--at) * var(--ppm));height:calc(var(--min) * var(--ppm));
+  display:flex;align-items:center;justify-content:center;
+}
+.spine::before{content:"";position:absolute;left:50%;transform:translateX(-50%);top:4px;bottom:4px;width:2px;background:var(--pine);border-radius:1px;transition:background .3s}
+.spine::after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:1px;width:6px;height:6px;border-radius:50%;background:var(--pine);transition:background .3s}
+.spine b{
+  position:relative;z-index:1;
+  font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:12px;color:var(--pine);
+  background:var(--ground);padding:3px 0;line-height:1;transition:color .3s;
+}
+.spine.past{opacity:.42}
+.spine.current::before,.spine.current::after{background:var(--accent)}
+.spine.current b{color:var(--accent)}
 
 .segs{list-style:none;margin:0;padding:0}
 .seg{
@@ -263,16 +282,15 @@ h1{
 .seg .idx{font-size:12.5px;color:var(--pine);letter-spacing:.02em}
 .seg .name{font-size:15px;font-weight:500;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg .time{font-size:12.5px;color:var(--muted);letter-spacing:.03em}
-
 .seg.rest{background:var(--sunk)}
 .seg.rest .name{font-size:10.5px;font-weight:400;color:var(--faint);letter-spacing:.16em}
 .seg.rest .time{font-size:10.5px;color:var(--faint)}
 .seg.rest .idx{font-size:10.5px;color:var(--faint)}
-
+.seg.rest.inner{background:var(--surface)}
+.seg.rest.inner .name::after{content:" · 大节内";letter-spacing:.06em}
 .seg.lunch{background:var(--amber-soft)}
 .seg.lunch .name{font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:19px;letter-spacing:.1em}
 .seg.lunch .idx,.seg.lunch .time{color:var(--amber)}
-
 .seg.past{opacity:.42}
 .seg.current{background:var(--accent-soft);opacity:1}
 .seg.current .name{color:var(--accent)}
@@ -294,26 +312,29 @@ h1{
 .note{margin:18px 0 0;font-size:12px;color:var(--faint);text-align:center;letter-spacing:.04em}
 
 @media (max-width:560px){
-  :root{--ppm:1.7px;--gutter:46px}
-  .wrap{padding:28px 14px 56px}
-  .shift{padding:16px 14px 18px}
-  .readouts{grid-template-columns:1fr 1fr}
-  .ro:first-child{grid-column:1 / -1}
-  .ro-v{font-size:18px}
-  .ro-v .was{font-size:13px}
+  :root{--ppm:1.7px;--gutter:46px;--spine:24px}
+  .wrap{padding:26px 14px 56px}
+  .livetime{font-size:20px}
+  .now{padding:14px 14px 14px}
+  .pname{font-size:26px}
+  .settings{padding:0 14px 12px}
+  .set-row{grid-template-columns:1fr;gap:10px}
+  .set-label{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px}
+  .set-val{font-size:18px;text-align:right}
+  .set-val.serif{font-size:15px}
+  .minireset{margin-top:0}
+  .set-foot{flex-direction:column-reverse;align-items:stretch}
+  .btn{align-self:flex-start}
   .kbd{display:none}
-  .strip{height:46px}
-  .blk b{font-size:14px}
+  .blk b{font-size:13px}
   .blk small{display:none}
   .gap{flex-basis:16px}
   .gap.on{flex-basis:52px}
   .gap span{font-size:12px;letter-spacing:.04em}
-  .lunchpos .readouts.two{grid-template-columns:1fr}
-  .ro-v .arr{margin:0 4px}
-  .status{grid-template-columns:1fr}
-  .panel + .panel{border-left:0;border-top:1px solid var(--line)}
   .seg{grid-template-columns:2.2rem 1fr auto;padding:0 10px 0 8px;gap:8px}
   .seg .name{font-size:14px}
+  .seg.rest.inner .name::after{content:""}
+  .spine b{font-size:11px}
   .tally{grid-template-columns:repeat(2,1fr)}
 }
 @media (prefers-reduced-motion:reduce){
@@ -324,93 +345,78 @@ h1{
 <body>
 <div class="wrap">
   <header class="masthead">
-    <p class="eyebrow">作息时刻表</p>
-    <h1>一日十二节</h1>
-    <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，每节 40 分钟，节间休息 10 分钟，其中一段休息 80 分钟，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
-    <p class="livetime mono" id="clock">--:--:--</p>
+    <div>
+      <p class="eyebrow">作息时刻表</p>
+      <h1>一日十二节</h1>
+    </div>
+    <div class="clockbox">
+      <p class="livetime mono" id="clock">--:--:--</p>
+      <p class="today mono" id="today"></p>
+    </div>
   </header>
+  <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，六大节、每大节两小节各 40 分钟，节间休息 10 分钟，其中一段休息 80 分钟，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
 
-  <section class="shift" id="shift" data-off="0" aria-labelledby="shiftTitle">
-    <div class="shift-head">
-      <p class="shift-title" id="shiftTitle">整体偏移</p>
-      <div class="shift-actions">
-        <button class="reset primary" id="startNow" type="button" title="把第 1 节对齐到现在（取整到 10 分钟）">从现在开始</button>
-        <button class="reset" id="reset" type="button" disabled>复位到 0</button>
-      </div>
-    </div>
-
-    <div class="slider-row">
-      <button class="nudge" id="minus" type="button" aria-label="提前 10 分钟">−</button>
-      <div class="track">
-        <div class="rail"></div>
-        <div class="fill" id="fill"></div>
-        <div class="zero"></div>
-        <div class="dead" id="dead" title="80 分钟休息放在一天两端时，最右 10 分钟不可用"></div>
-        <div class="ticks" id="ticks" aria-hidden="true"></div>
-        <input class="range" id="range" type="range" min="-420" max="360" step="10" value="0"
-               aria-label="整体偏移，最早提前 7 小时到 00:00 开始，最晚推后 6 小时到 24:00 结束，步长 10 分钟" aria-valuetext="与原表一致">
-      </div>
-      <button class="nudge" id="plus" type="button" aria-label="推后 10 分钟">+</button>
-    </div>
-
-    <div class="readouts" aria-live="polite">
-      <div class="ro">
-        <p class="ro-l">偏移量</p>
-        <p class="ro-v big mono" id="offBig">0:00</p>
-        <p class="ro-c" id="offCap">与原表一致</p>
-      </div>
-      <div class="ro">
-        <p class="ro-l" id="roStartL">开始 · 第 1 节</p>
-        <p class="ro-v mono" id="roStart">07:00</p>
-        <p class="ro-c" id="roStartCap">第 1 节 07:00 – 07:40</p>
-      </div>
-      <div class="ro">
-        <p class="ro-l" id="roEndL">结束 · 第 12 节</p>
-        <p class="ro-v mono" id="roEnd">18:00</p>
-        <p class="ro-c" id="roEndCap">第 12 节 17:20 – 18:00</p>
-      </div>
-    </div>
-    <div class="foot" id="foot">
-      <p class="hint">范围 −7h ～ +6h，整张表始终落在 00:00 – 24:00 内 · 双击滑块复位<span class="kbd"> · ← → 键每次 10 分钟</span> · 会记住</p>
-      <p class="flash" id="flash" aria-live="polite"></p>
-    </div>
-  </section>
-
-  <section class="shift lunchpos" id="lunchPanel" data-pos="3" aria-labelledby="lunchTitle">
-    <div class="shift-head">
-      <p class="shift-title" id="lunchTitle">80 分钟休息的位置</p>
-      <div class="shift-actions">
-        <button class="reset" id="lunchReset" type="button" disabled>复位到第 6 节后</button>
-      </div>
-    </div>
-    <div class="strip" id="strip" role="radiogroup" aria-label="80 分钟休息放在哪一大节之后"></div>
-    <div class="readouts two" aria-live="polite">
-      <div class="ro">
-        <p class="ro-l" id="lunchLabel">休息 80 分钟</p>
-        <p class="ro-v big mono" id="lunchRange">11:50 – 13:10</p>
-        <p class="ro-c" id="lunchCap">第 6 节后 · 与原表一致</p>
-      </div>
-      <div class="ro">
-        <p class="ro-l">休息前 / 后</p>
-        <p class="ro-v mono" id="splitV">6 + 6 节</p>
-        <p class="ro-c" id="splitCap">第 1–6 节 · 第 7–12 节</p>
-      </div>
-    </div>
-    <p class="hint">点空位放这段休息，大节（两小节连上）不拆开 · 放在最前 / 最后时全天多 10 分钟<span class="kbd"> · ← → 键前后移一大节</span> · 会记住</p>
-  </section>
-
-  <section class="status" id="status" aria-live="polite">
-    <div class="panel">
+  <section class="now panel" id="status" aria-live="polite">
+    <div class="now-head">
       <p class="plabel">现在<span class="chip mono" id="nowChip" hidden></span></p>
-      <p class="pname" id="nowName">—</p>
-      <p class="prange mono" id="nowRange"></p>
-      <div class="meter"><span id="meterFill"></span></div>
       <p class="pcount mono" id="nowCount"></p>
     </div>
-    <div class="panel">
-      <p class="plabel">接下来</p>
-      <p class="pname small" id="nextName">—</p>
+    <div class="now-main">
+      <p class="pname" id="nowName">—</p>
+      <p class="prange mono" id="nowRange"></p>
+    </div>
+    <div class="meter"><span id="meterFill"></span></div>
+    <div class="overview" id="overview" aria-hidden="true"></div>
+    <div class="next">
+      <span class="plabel">接下来</span>
+      <p class="nname" id="nextName">—</p>
       <p class="prange mono" id="nextRange"></p>
+    </div>
+  </section>
+
+  <section class="settings panel" id="settings" data-off="0" data-pos="3">
+    <div class="set-row">
+      <div class="set-label">
+        <p class="plabel">整体偏移</p>
+        <p class="set-val off mono" id="offBig">0:00</p>
+        <button class="minireset" id="offReset" type="button" disabled>复位到 0</button>
+      </div>
+      <div class="set-body">
+        <div class="slider-row">
+          <button class="nudge" id="minus" type="button" aria-label="提前 10 分钟">−</button>
+          <div class="track">
+            <div class="rail"></div>
+            <div class="fill" id="fill"></div>
+            <div class="zero"></div>
+            <div class="dead" id="dead" title="80 分钟休息放在一天两端时，最右 10 分钟不可用"></div>
+            <div class="ticks" id="ticks" aria-hidden="true"></div>
+            <input class="range" id="range" type="range" min="-420" max="360" step="10" value="0"
+                   aria-label="整体偏移，最早提前 7 小时到 00:00 开始，最晚推后 6 小时到 24:00 结束，步长 10 分钟" aria-valuetext="与原表一致">
+          </div>
+          <button class="nudge" id="plus" type="button" aria-label="推后 10 分钟">+</button>
+        </div>
+        <p class="set-read" id="offRead" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="set-row">
+      <div class="set-label">
+        <p class="plabel">80 分钟休息</p>
+        <p class="set-val pos serif" id="lunchBig">第 6 节后</p>
+        <button class="minireset" id="lunchReset" type="button" disabled>复位到第 6 节后</button>
+      </div>
+      <div class="set-body">
+        <div class="strip" id="strip" role="radiogroup" aria-label="80 分钟休息放在哪一大节之后"></div>
+        <p class="set-read" id="lunchRead" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="set-foot">
+      <div class="foot" id="foot">
+        <p class="hint">整张表始终落在 00:00 – 24:00 内 · 休息放到最前 / 最后时全天多 10 分钟 · 大节（两小节连上）不拆开<span class="kbd"> · 滑块 ← → 每次 10 分钟，双击复位 · 空位 ← → 移一大节</span> · 设置会记住</p>
+        <p class="flash" id="flash" aria-live="polite"></p>
+      </div>
+      <button class="btn" id="startNow" type="button" title="把开始时间对齐到现在（取整到 10 分钟）">从现在开始</button>
     </div>
   </section>
 
@@ -418,15 +424,16 @@ h1{
     <span class="key"><span class="dot lesson"></span>上课 40min</span>
     <span class="key"><span class="dot rest"></span>休息 10min</span>
     <span class="key"><span class="dot lunch"></span>休息 80min</span>
-    <span class="key">块高即时长</span>
+    <span class="key spinekey"><i></i>一大节 = 两小节</span>
     <span class="legend-chips">
       <span class="chip mono" id="axisChip" hidden></span>
-      <span class="chip" id="lunchChip" hidden></span>
+      <span class="chip amber" id="lunchChip" hidden></span>
     </span>
   </div>
 
   <div class="ribbon" id="ribbon">
     <div class="axis" id="axis"></div>
+    <div class="spines" id="spines"></div>
     <ol class="segs" id="segs"></ol>
     <div class="nowline" id="nowline" hidden><span class="nowpill mono" id="nowpill">--:--</span></div>
   </div>
@@ -441,49 +448,47 @@ h1{
 </div>
 
 <script>
-
-const BASE_START = 420;                    // 07:00 before any offset; the end depends on where the 长休 sits
-const STEP = 10, MIN_OFF = -420, MAX_OFF = 360;   // −7 h puts 第 1 节 at 00:00, +6 h puts 第 12 节 at 24:00
+const BASE_START = 420;                    // 07:00 before any offset; the end depends on where the 80-min break sits
+const STEP = 10, MIN_OFF = -420, MAX_OFF = 360;   // −7 h puts the table at 00:00; +6 h is the slider's far end
 const pad = n => String(n).padStart(2,"0");
 
-/* The day is 6 大节 (two 40-min 小节 joined by a 10-min 课间). Between 大节 there is a 10-min 课间,
-   except one slot that holds the 80-min 长休. lunchAfter says which 大节 it follows: 1–5 between 大节,
-   0 = before 第 1 节, 6 = after 第 12 节 (then all five 课间 stay and the day is 670 min instead of 660). */
+/* The day is 6 大节 (two 40-min 小节 joined by a 10-min break). Between 大节 there is a 10-min break,
+   except one slot that holds the 80-min break. lunchAfter says which 大节 it follows: 1–5 between 大节,
+   0 = before 第 1 节, 6 = after 第 12 节 (then all five short breaks stay and the day is 670 min). */
 const BLOCKS = 6, LUNCH_DEFAULT = 3;
 let lunchAfter = LUNCH_DEFAULT;
 function buildDay(pos){
   const list = []; let t = BASE_START;
-  const push = (k, n, len) => { list.push({ k, n, from: t, to: t + len, len }); t += len; };
-  if (pos === 0) push("lunch", null, 80);
+  const push = (k, n, len, blk) => { list.push({ k, n, from: t, to: t + len, len, blk }); t += len; };
+  if (pos === 0) push("lunch", null, 80, 0);
   for (let b = 1; b <= BLOCKS; b++){
-    push("lesson", 2*b - 1, 40);
-    push("rest", null, 10);
-    push("lesson", 2*b, 40);
-    if (b < BLOCKS) push(b === pos ? "lunch" : "rest", null, b === pos ? 80 : 10);
+    push("lesson", 2*b - 1, 40, b);
+    push("rest", null, 10, b);            // inside the 大节
+    push("lesson", 2*b, 40, b);
+    if (b < BLOCKS) push(b === pos ? "lunch" : "rest", null, b === pos ? 80 : 10, 0);
   }
-  if (pos === BLOCKS) push("lunch", null, 80);
+  if (pos === BLOCKS) push("lunch", null, 80, 0);
   return list;
 }
 let DAY = buildDay(lunchAfter);
 
 let off = 0;   // minutes, applied to every time on the page
 
-const dayEnd = () => DAY[DAY.length - 1].to;             // 18:00, or 18:10 with the 长休 at either end
-const maxOff = () => 1440 - dayEnd();                    // keeps the whole table inside the day
+const dayEnd = () => DAY[DAY.length - 1].to;
+const maxOff = () => 1440 - dayEnd();
 const clampOff = v => Math.max(MIN_OFF, Math.min(maxOff(), Math.round(v / STEP) * STEP));
-const ZERO_POS = (0 - MIN_OFF) / (MAX_OFF - MIN_OFF);   // where 0 sits on the rail (slider geometry stays fixed)
+const ZERO_POS = (0 - MIN_OFF) / (MAX_OFF - MIN_OFF);
 const start = () => BASE_START + off;
 const end   = () => dayEnd() + off;
 const firstLesson = () => DAY.find(d => d.k === "lesson");
 const lastLesson  = () => [...DAY].reverse().find(d => d.k === "lesson");
-
-/* HH:MM; the day never wraps, so the latest possible value is 24:00 */
-const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
 const lunchSeg = () => DAY.find(d => d.k === "lunch");
-const lunchName = () => "休息";   // every break is 休息; the 10-min and 80-min ones differ only in length
+
+const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
 const nameOf = d => d.k === "lesson" ? "第 " + d.n + " 节" : "休息";
 const rangeText = d => clock(d.from + off) + " – " + clock(d.to + off) + " · " + d.len + " 分钟";
 const untilLabel = d => d.k === "lesson" ? "距下课" : "距上课";
+const CN = ["一","二","三","四","五","六"];
 
 function offLabel(){
   const a = Math.abs(off), h = Math.floor(a / 60), m = a % 60;
@@ -494,217 +499,137 @@ function offWords(){
   const a = Math.abs(off), h = Math.floor(a / 60), m = a % 60;
   return ("整体" + (off < 0 ? "提前" : "推后") + " " + (h ? h + " 小时 " : "") + (m ? m + " 分钟" : "")).trim();
 }
+const whereText = () => lunchAfter === 0 ? "一天最前" : lunchAfter === BLOCKS ? "一天最后" : "第 " + (2 * lunchAfter) + " 节后";
 
-/* --- ribbon: rebuilt when the 长休 moves; times refreshed on every offset change --- */
-const segs = document.getElementById("segs");
-const axis = document.getElementById("axis");
-let nodes = [], timeCells = [], lunchNode = null;
+/* ---------- element map ---------- */
+const $ = id => document.getElementById(id);
+const el = {
+  clock: $("clock"), today: $("today"), ledeStart: $("ledeStart"), ledeEnd: $("ledeEnd"),
+  status: $("status"), nowChip: $("nowChip"), nowCount: $("nowCount"), nowName: $("nowName"), nowRange: $("nowRange"),
+  meter: $("meterFill"), overview: $("overview"), nextName: $("nextName"), nextRange: $("nextRange"),
+  settings: $("settings"), range: $("range"), fill: $("fill"), dead: $("dead"), minus: $("minus"), plus: $("plus"),
+  offBig: $("offBig"), offRead: $("offRead"), offReset: $("offReset"),
+  lunchBig: $("lunchBig"), lunchRead: $("lunchRead"), lunchReset: $("lunchReset"), strip: $("strip"),
+  startNow: $("startNow"), foot: $("foot"), flash: $("flash"),
+  axisChip: $("axisChip"), lunchChip: $("lunchChip"),
+  ribbon: $("ribbon"), axis: $("axis"), spines: $("spines"), segs: $("segs"), line: $("nowline"), pill: $("nowpill"),
+  tallyAll: $("tallyAll"), tallyRest: $("tallyRest"), tallyCount: $("tallyCount")
+};
+
+/* ---------- ribbon + overview: rebuilt when the break moves ---------- */
+let nodes = [], timeCells = [], spineNodes = [], ovSegs = [], ovGroups = [], ovNow = null;
 function renderRibbon(){
-  segs.innerHTML = DAY.map((d,i) => {
+  el.segs.innerHTML = DAY.map((d, i) => {
     const idx = d.k === "lesson" ? d.n : (d.k === "lunch" ? "—" : "·");
-    return '<li class="seg ' + d.k + '" data-i="' + i + '" style="--min:' + d.len + '">' +
+    const inner = d.k === "rest" && d.blk ? " inner" : "";
+    return '<li class="seg ' + d.k + inner + '" data-i="' + i + '" style="--min:' + d.len + '">' +
              '<span class="idx mono">' + idx + '</span>' +
              '<span class="name">' + nameOf(d) + '</span>' +
              '<span class="time mono"></span>' +
            '</li>';
   }).join("");
-  nodes = [...segs.children];
+  nodes = [...el.segs.children];
   timeCells = nodes.map(n => n.querySelector(".time"));
-  lunchNode = nodes[DAY.indexOf(lunchSeg())].querySelector(".name");
-}
-renderRibbon();
 
-const lunchLabels = [...document.querySelectorAll("[data-lunch]")];
+  // one spine per 大节, spanning 小节 + inner break + 小节
+  el.spines.innerHTML = Array.from({ length: BLOCKS }, (_, i) => {
+    const b = i + 1, a = DAY.find(d => d.k === "lesson" && d.n === 2*b - 1), z = DAY.find(d => d.k === "lesson" && d.n === 2*b);
+    return '<div class="spine" data-blk="' + b + '" style="--at:' + (a.from - BASE_START) + ';--min:' + (z.to - a.from) + '" title="第 ' + b + ' 大节 · 第 ' + (2*b-1) + '–' + (2*b) + ' 节"><b>' + CN[i] + '</b></div>';
+  }).join("");
+  spineNodes = [...el.spines.children];
+
+  // proportional overview bar in the now card, grouped the same way
+  let html = "", i = 0;
+  const seg = d => '<span class="ov-seg ' + d.k + '" data-i="' + DAY.indexOf(d) + '" style="flex-grow:' + d.len + '"></span>';
+  while (i < DAY.length){
+    const d = DAY[i];
+    if (d.k === "lesson"){
+      const trio = DAY.slice(i, i + 3);
+      html += '<div class="ov-col group" data-blk="' + d.blk + '" style="flex:' + trio.reduce((a, x) => a + x.len, 0) + ' 1 0"><div class="ov-bar">' + trio.map(seg).join("") + '</div><div class="ov-num">' + CN[d.blk - 1] + '</div></div>';
+      i += 3;
+    } else {
+      html += '<div class="ov-col" style="flex:' + d.len + ' 1 0"><div class="ov-bar">' + seg(d) + '</div><div class="ov-num"></div></div>';
+      i += 1;
+    }
+  }
+  el.overview.innerHTML = html + '<div class="ov-now" id="ovNow" hidden></div>';
+  ovSegs = DAY.map((_, k) => el.overview.querySelector('.ov-seg[data-i="' + k + '"]'));
+  ovGroups = [...el.overview.querySelectorAll(".ov-col.group")];
+  ovNow = $("ovNow");
+}
+
 function renderTimes(){
   DAY.forEach((d, i) => {
     timeCells[i].textContent = clock(d.from + off) + "–" + clock(d.to + off) + " · " + d.len + "min";
   });
-  const ln = lunchName();
-  lunchNode.textContent = ln;
-  lunchLabels.forEach(n => { n.textContent = ln + (n.dataset.lunch || ""); });
   let html = "";
   for (let h = Math.ceil(start() / 60); h * 60 <= end(); h++){
     html += '<span class="tick mono" style="--at:' + (h*60 - start()) + '">' + clock(h*60) + '</span>';
   }
-  axis.innerHTML = html;
+  el.axis.innerHTML = html;
 }
 
-/* --- slider ticks: one per hour, labelled every 3 h --- */
+/* ---------- slider ticks (fixed geometry: −7 h … +6 h) ---------- */
 document.querySelector(".track").style.setProperty("--zero", ZERO_POS);
-document.getElementById("ticks").innerHTML = Array.from({length: (MAX_OFF - MIN_OFF) / 60 + 1}, (_, i) => {
+$("ticks").innerHTML = Array.from({ length: (MAX_OFF - MIN_OFF) / 60 + 1 }, (_, i) => {
   const h = i + MIN_OFF / 60;
   const major = h === MIN_OFF / 60 || h === MAX_OFF / 60 || (h % 3 === 0 && h !== -6);
   const l = h === 0 ? "0" : (h > 0 ? "+" : "−") + Math.abs(h) + "h";
-  const t = clock(BASE_START + h * 60);   // where 第 1 节 would start at this offset
+  const t = clock(BASE_START + h * 60);
   return '<i' + (major ? ' class="major' + (h === 0 ? ' zero-tick' : '') + '" data-l="' + l + '" data-t="' + t + '"' : '') + '></i>';
 }).join("");
 
-/* --- offset control --- */
-const el = {
-  shift: document.getElementById("shift"),
-  range: document.getElementById("range"),
-  fill: document.getElementById("fill"),
-  dead: document.getElementById("dead"),
-  reset: document.getElementById("reset"),
-  minus: document.getElementById("minus"),
-  plus: document.getElementById("plus"),
-  offBig: document.getElementById("offBig"),
-  offCap: document.getElementById("offCap"),
-  roStart: document.getElementById("roStart"),
-  roEnd: document.getElementById("roEnd"),
-  roStartL: document.getElementById("roStartL"),
-  roEndL: document.getElementById("roEndL"),
-  roStartCap: document.getElementById("roStartCap"),
-  roEndCap: document.getElementById("roEndCap"),
-  ledeStart: document.getElementById("ledeStart"),
-  ledeEnd: document.getElementById("ledeEnd"),
-  nowChip: document.getElementById("nowChip"),
-  axisChip: document.getElementById("axisChip"),
-  clock: document.getElementById("clock"),
-  status: document.getElementById("status"),
-  nowName: document.getElementById("nowName"),
-  nowRange: document.getElementById("nowRange"),
-  nowCount: document.getElementById("nowCount"),
-  meter: document.getElementById("meterFill"),
-  nextName: document.getElementById("nextName"),
-  nextRange: document.getElementById("nextRange"),
-  line: document.getElementById("nowline"),
-  pill: document.getElementById("nowpill")
-};
-
+/* ---------- offset ---------- */
 function setOffset(v, persist){
   off = clampOff(v);
   el.range.value = off;
-  el.shift.dataset.off = off;
+  el.settings.dataset.off = off;
   el.range.setAttribute("aria-valuetext", offWords());
 
-  // filled portion of the rail, from the zero detent to the thumb
+  const usable = "(100% - var(--thumb))", half = "var(--thumb) / 2";
   const pct = (off - MIN_OFF) / (MAX_OFF - MIN_OFF) * 100, zp = ZERO_POS * 100;
-  const half = "var(--thumb) / 2";
-  const usable = "(100% - var(--thumb))";
   const lo = Math.min(pct, zp), hi = Math.max(pct, zp);
   el.fill.style.left  = "calc(" + half + " + " + usable + " * " + (lo / 100) + ")";
   el.fill.style.width = "calc(" + usable + " * " + ((hi - lo) / 100) + ")";
-
-  el.reset.disabled = off === 0;
-  el.minus.disabled = off <= MIN_OFF;
-  el.plus.disabled  = off >= maxOff();
-
-  el.offBig.textContent = offLabel();
-  el.offCap.textContent = offWords() + (off === MIN_OFF ? " · 已到一天最早" : off === maxOff() ? " · 已到一天最晚" : "");
-  // stripe the unreachable tail of the rail when the 长休 sits at an end (day is 670 min → ceiling +5:50)
   const deadFrac = (MAX_OFF - maxOff()) / (MAX_OFF - MIN_OFF);
   el.dead.style.width = deadFrac ? "calc(" + usable + " * " + deadFrac + ")" : "0";
-  const arrow = (was, now) => off === 0
-    ? now
-    : '<span class="was">' + was + '</span><span class="arr">→</span>' + now;
+
+  el.offReset.disabled = off === 0;
+  el.minus.disabled = off <= MIN_OFF;
+  el.plus.disabled  = off >= maxOff();
+  el.offBig.textContent = offLabel();
+
+  const arrow = (was, now) => off === 0 ? "<b>" + now + "</b>" : '<span class="was">' + was + '</span><span class="arr">→</span><b>' + now + "</b>";
+  const bound = off === MIN_OFF ? "（已到一天最早）" : off === maxOff() ? "（已到一天最晚）" : "";
   const fl = firstLesson(), ll = lastLesson();
-  el.roStartL.textContent = "开始 · " + nameOf(DAY[0]);
-  el.roEndL.textContent   = "结束 · " + nameOf(DAY[DAY.length - 1]);
-  el.roStart.innerHTML = arrow(clock(BASE_START), clock(start()));
-  el.roEnd.innerHTML   = arrow(clock(dayEnd()), clock(end()));
-  el.roStartCap.textContent = "第 1 节 " + clock(fl.from + off) + " – " + clock(fl.to + off);
-  el.roEndCap.textContent   = "第 12 节 " + clock(ll.from + off) + " – " + clock(ll.to + off);
+  const it = h => '<span class="it">' + h + "</span>";
+  let read = it(offWords() + bound) +
+    '<span class="sep">|</span>' + it("开始 " + arrow(clock(BASE_START), clock(start()))) +
+    '<span class="sep">|</span>' + it("结束 " + arrow(clock(dayEnd()), clock(end())));
+  if (DAY[0].k !== "lesson") read += '<span class="sep">|</span>' + it("第 1 节 <b>" + clock(fl.from + off) + "</b> 起");
+  if (DAY[DAY.length - 1].k !== "lesson") read += '<span class="sep">|</span>' + it("第 12 节 <b>" + clock(ll.to + off) + "</b> 止");
+  el.offRead.innerHTML = read;
 
   el.ledeStart.textContent = clock(start());
   el.ledeEnd.textContent = clock(end());
-  const chip = off === 0 ? "" : "含偏移 " + offLabel();
   el.nowChip.hidden = el.axisChip.hidden = off === 0;
-  el.nowChip.textContent = el.axisChip.textContent = chip;
+  el.nowChip.textContent = el.axisChip.textContent = off === 0 ? "" : "含偏移 " + offLabel();
 
   renderTimes();
-  renderLunchReadouts();
+  renderLunchRead();
   tick();
   if (persist){ try { localStorage.setItem("offsetMin", String(off)); } catch (e) {} }
 }
 
-/* --- 长休 position control --- */
-const lp = {
-  panel: document.getElementById("lunchPanel"),
-  strip: document.getElementById("strip"),
-  reset: document.getElementById("lunchReset"),
-  label: document.getElementById("lunchLabel"),
-  range: document.getElementById("lunchRange"),
-  cap: document.getElementById("lunchCap"),
-  splitV: document.getElementById("splitV"),
-  splitCap: document.getElementById("splitCap"),
-  chip: document.getElementById("lunchChip")
-};
-const CN = ["一","二","三","四","五","六"];
-function gapHTML(pos){
-  const on = pos === lunchAfter;
-  const where = pos === 0 ? "一天最前" : pos === BLOCKS ? "一天最后" : "第 " + (2*pos) + " 节后";
-  return '<button class="gap' + (on ? " on" : "") + '" type="button" role="radio" data-pos="' + pos + '"' +
-         ' aria-checked="' + on + '" aria-label="80 分钟休息放在' + where + '" tabindex="' + (on ? 0 : -1) + '">' +
-         '<span>' + lunchName() + '</span></button>';
-}
-function renderStrip(){
-  let html = gapHTML(0);
-  for (let b = 1; b <= BLOCKS; b++){
-    html += '<div class="blk" title="第 ' + (2*b-1) + '–' + (2*b) + ' 节"><b>' + CN[b-1] + '</b><small>' + (2*b-1) + '·' + (2*b) + '</small></div>';
-    html += gapHTML(b);
-  }
-  lp.strip.innerHTML = html;
-}
-function renderLunchReadouts(){
-  const L = lunchSeg(), ln = lunchName(), after = 2 * lunchAfter;
-  lp.label.textContent = ln + " 80 分钟";
-  lp.range.textContent = clock(L.from + off) + " – " + clock(L.to + off);
-  const d = lunchAfter - LUNCH_DEFAULT;
-  const where = lunchAfter === 0 ? "一天最前" : lunchAfter === BLOCKS ? "一天最后" : "第 " + after + " 节后";
-  lp.cap.textContent = where + (d === 0 ? " · 与原表一致" : " · 比原表" + (d < 0 ? "早" : "晚") + " " + Math.abs(d) + " 大节");
-  lp.splitV.textContent = after + " + " + (12 - after) + " 节";
-  lp.splitCap.textContent = lunchAfter === 0 ? "休息在前 · 第 1–12 节连上" : lunchAfter === BLOCKS ? "第 1–12 节连上 · 休息在后" : "第 1–" + after + " 节 · 第 " + (after + 1) + "–12 节";
-  // tally follows the layout (670-min days have one more 10-min break)
-  const restMin = DAY.filter(d => d.k !== "lesson").reduce((a, d) => a + d.len, 0);
-  const total = dayEnd() - BASE_START;
-  document.getElementById("tallyAll").textContent = Math.floor(total / 60) + " 小时" + (total % 60 ? " " + (total % 60) + " 分" : "");
-  document.getElementById("tallyRest").textContent = restMin + " 分钟";
-  document.getElementById("tallyCount").textContent = DAY.filter(d => d.k !== "lesson").length + " 次";
-  lp.chip.hidden = d === 0;
-  lp.chip.textContent = ln + " · " + where;
-  lp.strip.querySelectorAll(".gap span").forEach(n => { n.textContent = ln; });
-}
-function setLunch(pos, persist){
-  pos = Math.max(0, Math.min(BLOCKS, Math.round(pos)));
-  lunchAfter = pos;
-  DAY = buildDay(lunchAfter);
-  lp.panel.dataset.pos = pos;
-  lp.reset.disabled = pos === LUNCH_DEFAULT;
-  document.getElementById("ribbon").style.setProperty("--total", dayEnd() - BASE_START);
-  renderRibbon();
-  renderStrip();
-  setOffset(off, false);   // re-clamps the offset to the (possibly shorter) day and refreshes every readout
-  if (persist){ try { localStorage.setItem("lunchAfter", String(pos)); } catch (e) {} }
-}
-lp.strip.addEventListener("click", e => {
-  const g = e.target.closest(".gap"); if (!g) return;
-  setLunch(Number(g.dataset.pos), true);
-  lp.strip.querySelector(".gap.on").focus();
-});
-lp.strip.addEventListener("keydown", e => {
-  if (!e.target.closest(".gap")) return;
-  const dir = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : 0;
-  if (e.key === "Home") { e.preventDefault(); setLunch(0, true); lp.strip.querySelector(".gap.on").focus(); return; }
-  if (e.key === "End")  { e.preventDefault(); setLunch(BLOCKS, true); lp.strip.querySelector(".gap.on").focus(); return; }
-  if (!dir) return;
-  e.preventDefault();
-  setLunch(lunchAfter + dir, true);
-  lp.strip.querySelector(".gap.on").focus();
-});
-lp.reset.addEventListener("click", () => { setLunch(LUNCH_DEFAULT, true); lp.strip.querySelector(".gap.on").focus(); });
-
-const flashEl = document.getElementById("flash"), footEl = document.getElementById("foot");
 let flashTimer = 0;
 function flash(msg){
   clearTimeout(flashTimer);
-  flashEl.textContent = msg;
-  footEl.classList.add("hot");
-  flashTimer = setTimeout(() => { footEl.classList.remove("hot"); }, 5000);
+  el.flash.textContent = msg;
+  el.foot.classList.add("hot");
+  flashTimer = setTimeout(() => { el.foot.classList.remove("hot"); }, 5000);
 }
 
-/* 从现在开始: offset = how late today already is, rounded up to the next 10 min */
-document.getElementById("startNow").addEventListener("click", () => {
+el.startNow.addEventListener("click", () => {
   const now = new Date();
   const m = now.getHours() * 60 + now.getMinutes();
   const want = Math.ceil(m / STEP) * STEP - BASE_START;
@@ -713,19 +638,79 @@ document.getElementById("startNow").addEventListener("click", () => {
   else flash("开始对齐到 " + clock(start()) + " · " + offWords());
   el.range.focus();
 });
-
 el.range.addEventListener("input", () => setOffset(Number(el.range.value), true));
 el.range.addEventListener("dblclick", () => setOffset(0, true));
-el.reset.addEventListener("click", () => { setOffset(0, true); el.range.focus(); });
+el.offReset.addEventListener("click", () => { setOffset(0, true); el.range.focus(); });
 el.minus.addEventListener("click", () => setOffset(off - STEP, true));
 el.plus.addEventListener("click", () => setOffset(off + STEP, true));
 
-/* --- live clock --- */
+/* ---------- 80-min break position ---------- */
+function gapHTML(pos){
+  const on = pos === lunchAfter;
+  const where = pos === 0 ? "一天最前" : pos === BLOCKS ? "一天最后" : "第 " + (2*pos) + " 节后";
+  return '<button class="gap' + (on ? " on" : "") + '" type="button" role="radio" data-pos="' + pos + '"' +
+         ' aria-checked="' + on + '" aria-label="80 分钟休息放在' + where + '" tabindex="' + (on ? 0 : -1) + '">' +
+         '<span>休息</span></button>';
+}
+function renderStrip(){
+  let html = gapHTML(0);
+  for (let b = 1; b <= BLOCKS; b++){
+    html += '<div class="blk" title="第 ' + b + ' 大节 · 第 ' + (2*b-1) + '–' + (2*b) + ' 节"><b>' + CN[b-1] + '</b><small>' + (2*b-1) + '·' + (2*b) + '</small></div>';
+    html += gapHTML(b);
+  }
+  el.strip.innerHTML = html;
+}
+function renderLunchRead(){
+  const L = lunchSeg(), after = 2 * lunchAfter, d = lunchAfter - LUNCH_DEFAULT;
+  el.lunchBig.textContent = lunchAfter === 0 ? "一天最前" : lunchAfter === BLOCKS ? "一天最后" : "第 " + after + " 节后";
+  const split = lunchAfter === 0 ? "第 1–12 节连上" : lunchAfter === BLOCKS ? "第 1–12 节连上" : "前 " + after + " 节 / 后 " + (12 - after) + " 节";
+  const it = h => '<span class="it">' + h + "</span>";
+  el.lunchRead.innerHTML =
+    it(d === 0 ? "与原表一致" : "比原表" + (d < 0 ? "早" : "晚") + " " + Math.abs(d) + " 大节") +
+    '<span class="sep">|</span>' + it("<b>" + clock(L.from + off) + " – " + clock(L.to + off) + "</b>") +
+    '<span class="sep">|</span>' + it(split);
+  el.lunchChip.hidden = d === 0;
+  el.lunchChip.textContent = "休息 · " + whereText();
+
+  const breaks = DAY.filter(x => x.k !== "lesson");
+  const total = dayEnd() - BASE_START;
+  el.tallyAll.textContent = Math.floor(total / 60) + " 小时" + (total % 60 ? " " + (total % 60) + " 分" : "");
+  el.tallyRest.textContent = breaks.reduce((a, x) => a + x.len, 0) + " 分钟";
+  el.tallyCount.textContent = breaks.length + " 次";
+}
+function setLunch(pos, persist){
+  pos = Math.max(0, Math.min(BLOCKS, Math.round(pos)));
+  lunchAfter = pos;
+  DAY = buildDay(lunchAfter);
+  el.settings.dataset.pos = pos;
+  el.lunchReset.disabled = pos === LUNCH_DEFAULT;
+  el.ribbon.style.setProperty("--total", dayEnd() - BASE_START);
+  renderRibbon();
+  renderStrip();
+  setOffset(off, false);   // re-clamps to the (possibly shorter) day and refreshes every readout
+  if (persist){ try { localStorage.setItem("lunchAfter", String(pos)); } catch (e) {} }
+}
+const focusOn = () => { const g = el.strip.querySelector(".gap.on"); if (g) g.focus(); };
+el.strip.addEventListener("click", e => {
+  const g = e.target.closest(".gap"); if (!g) return;
+  setLunch(Number(g.dataset.pos), true); focusOn();
+});
+el.strip.addEventListener("keydown", e => {
+  if (!e.target.closest(".gap")) return;
+  const dir = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : 0;
+  if (e.key === "Home") { e.preventDefault(); setLunch(0, true); focusOn(); return; }
+  if (e.key === "End")  { e.preventDefault(); setLunch(BLOCKS, true); focusOn(); return; }
+  if (!dir) return;
+  e.preventDefault(); setLunch(lunchAfter + dir, true); focusOn();
+});
+el.lunchReset.addEventListener("click", () => { setLunch(LUNCH_DEFAULT, true); focusOn(); });
+
+/* ---------- live clock ---------- */
 function countdown(seconds){
   const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
   return m >= 60 ? Math.floor(m/60) + " 小时 " + pad(m%60) + " 分" : m + " 分 " + pad(s) + " 秒";
 }
-
+const WD = ["日","一","二","三","四","五","六"];
 let scrolled = false;
 
 function tick(){
@@ -733,20 +718,31 @@ function tick(){
   const secs = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
   const mins = secs / 60;
   el.clock.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+  el.today.textContent = pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + " 周" + WD[now.getDay()];
 
-  if (mins >= start() && mins <= end()){
-    el.line.hidden = false;
+  const inDay = mins >= start() && mins <= end();
+  el.line.hidden = !inDay;
+  ovNow.hidden = !inDay;
+  if (inDay){
     el.line.style.setProperty("--at", (mins - start()).toFixed(2));
     el.pill.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes());
-  } else {
-    el.line.hidden = true;
+    ovNow.style.left = ((mins - start()) / (dayEnd() - BASE_START) * 100).toFixed(3) + "%";
   }
 
   const ci = DAY.findIndex(d => mins >= d.from + off && mins < d.to + off);
+  const cb = ci === -1 ? 0 : DAY[ci].blk;
   nodes.forEach((node, i) => {
     node.classList.toggle("current", i === ci);
     node.classList.toggle("past", ci !== -1 && i < ci);
+    ovSegs[i].classList.toggle("current", i === ci);
+    ovSegs[i].classList.toggle("past", ci !== -1 && i < ci);
   });
+  spineNodes.forEach(sp => {
+    const b = Number(sp.dataset.blk);
+    sp.classList.toggle("current", b === cb);
+    sp.classList.toggle("past", ci !== -1 && b < cb);
+  });
+  ovGroups.forEach(g => g.classList.toggle("current", Number(g.dataset.blk) === cb));
 
   if (ci !== -1){
     const cur = DAY[ci], nxt = DAY[ci+1];
@@ -784,7 +780,7 @@ function tick(){
   }
 }
 
-/* --- boot: restore a remembered offset, then run --- */
+/* ---------- boot ---------- */
 let saved = 0, savedLunch = LUNCH_DEFAULT;
 try {
   const v = parseInt(localStorage.getItem("offsetMin"), 10); if (Number.isFinite(v)) saved = v;
