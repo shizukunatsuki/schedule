@@ -170,10 +170,37 @@ h1{
 .ro-v .was{color:var(--faint);font-size:15px}
 .ro-v .arr{color:var(--faint);font-size:14px;margin:0 6px}
 .ro-c{margin:0;font-size:12px;color:var(--muted);letter-spacing:.03em;min-height:1.6em}
-.shift[data-off="0"] .ro-v.big{color:var(--muted)}
-.shift:not([data-off="0"]) .ro-v.big{color:var(--accent)}
+#shift[data-off="0"] .ro-v.big{color:var(--muted)}
+#shift:not([data-off="0"]) .ro-v.big{color:var(--accent)}
 .hint{margin:0;font-size:11.5px;color:var(--faint);letter-spacing:.04em;transition:color .3s}
 .hint.hot{color:var(--accent)}
+
+/* ---------- long-break position ---------- */
+.lunchpos{margin-top:12px}
+.strip{display:flex;align-items:stretch;height:52px;gap:0}
+.blk{
+  flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  background:var(--pine-soft);color:var(--pine);border:1px solid var(--line);border-left:0;
+}
+.blk:first-child{border-left:1px solid var(--line)}
+.blk b{font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:16px;line-height:1.1}
+.blk small{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;opacity:.8}
+.gap{
+  flex:0 0 22px;position:relative;margin:0;padding:0;border:0;background:var(--sunk);cursor:pointer;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  transition:flex-basis .25s ease,background .15s ease;
+}
+.gap::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:0;border-left:1px dotted var(--faint);transform:translateX(-50%);transition:opacity .15s}
+.gap:hover{background:var(--amber-soft)}
+.gap:hover::before{border-left-style:solid;border-color:var(--amber)}
+.gap:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;z-index:1}
+.gap span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:13px;letter-spacing:.1em;color:var(--amber);opacity:0;transition:opacity .2s;white-space:nowrap}
+.gap.on{flex-basis:72px;background:var(--amber-soft);cursor:default}
+.gap.on::before{opacity:0}
+.gap.on span{opacity:1}
+.readouts.two{grid-template-columns:1fr 1fr}
+.lunchpos[data-pos="3"] .ro-v.big{color:var(--muted)}
+.lunchpos:not([data-pos="3"]) .ro-v.big{color:var(--amber)}
 
 .chip{
   display:inline-block;vertical-align:middle;margin-left:8px;padding:1px 7px;
@@ -268,6 +295,13 @@ h1{
   .ro:first-child{grid-column:1 / -1}
   .ro-v{font-size:18px}
   .ro-v .was{font-size:13px}
+  .strip{height:46px}
+  .blk b{font-size:14px}
+  .blk small{display:none}
+  .gap{flex-basis:16px}
+  .gap.on{flex-basis:52px}
+  .gap span{font-size:12px;letter-spacing:.04em}
+  .lunchpos .readouts.two{grid-template-columns:1fr}
   .ro-v .arr{margin:0 4px}
   .status{grid-template-columns:1fr}
   .panel + .panel{border-left:0;border-top:1px solid var(--line)}
@@ -331,6 +365,29 @@ h1{
     <p class="hint" id="hint"></p>
   </section>
 
+  <section class="shift lunchpos" id="lunchPanel" data-pos="3" aria-labelledby="lunchTitle">
+    <div class="shift-head">
+      <p class="shift-title" id="lunchTitle">长休位置</p>
+      <div class="shift-actions">
+        <button class="reset" id="lunchReset" type="button" disabled>复位到第 6 节后</button>
+      </div>
+    </div>
+    <div class="strip" id="strip" role="radiogroup" aria-label="长休放在哪一大节之后"></div>
+    <div class="readouts two" aria-live="polite">
+      <div class="ro">
+        <p class="ro-l" id="lunchLabel">长休</p>
+        <p class="ro-v big mono" id="lunchRange">11:50 – 13:10</p>
+        <p class="ro-c" id="lunchCap">第 6 节后 · 与原表一致</p>
+      </div>
+      <div class="ro">
+        <p class="ro-l">长休前 / 后</p>
+        <p class="ro-v mono" id="splitV">6 + 6 节</p>
+        <p class="ro-c" id="splitCap">第 1–6 节 · 第 7–12 节</p>
+      </div>
+    </div>
+    <p class="hint">点两大节之间的空位放长休 · ← → 键前后移一大节 · 大节（两小节连上）不会被拆开 · 位置会记住</p>
+  </section>
+
   <section class="status" id="status" aria-live="polite">
     <div class="panel">
       <p class="plabel">现在<span class="chip mono" id="nowChip" hidden></span></p>
@@ -352,6 +409,7 @@ h1{
     <span class="key"><span class="dot lunch"></span><span data-lunch=" 80min">午休 80min</span></span>
     <span class="key">块高即时长</span>
     <span class="chip mono" id="axisChip" hidden></span>
+    <span class="chip" id="lunchChip" hidden></span>
   </div>
 
   <div class="ribbon" id="ribbon">
@@ -366,41 +424,31 @@ h1{
     <div><dt>课间</dt><dd class="mono">100 分钟</dd></div>
     <div><dt data-lunch="">午休</dt><dd class="mono">80 分钟</dd></div>
   </dl>
-  <p class="note">红线随本机时间移动 · 上课时段自动高亮 · 时长不随偏移改变</p>
+  <p class="note">红线随本机时间移动 · 上课时段自动高亮 · 时长不随偏移或长休位置改变</p>
 </div>
 
 <script>
-const DAY = [
-  {k:"lesson", n:1,  s:"07:00", e:"07:40"},
-  {k:"rest",   n:null, s:"07:40", e:"07:50"},
-  {k:"lesson", n:2,  s:"07:50", e:"08:30"},
-  {k:"rest",   n:null, s:"08:30", e:"08:40"},
-  {k:"lesson", n:3,  s:"08:40", e:"09:20"},
-  {k:"rest",   n:null, s:"09:20", e:"09:30"},
-  {k:"lesson", n:4,  s:"09:30", e:"10:10"},
-  {k:"rest",   n:null, s:"10:10", e:"10:20"},
-  {k:"lesson", n:5,  s:"10:20", e:"11:00"},
-  {k:"rest",   n:null, s:"11:00", e:"11:10"},
-  {k:"lesson", n:6,  s:"11:10", e:"11:50"},
-  {k:"lunch",  n:null, s:"11:50", e:"13:10"},
-  {k:"lesson", n:7,  s:"13:10", e:"13:50"},
-  {k:"rest",   n:null, s:"13:50", e:"14:00"},
-  {k:"lesson", n:8,  s:"14:00", e:"14:40"},
-  {k:"rest",   n:null, s:"14:40", e:"14:50"},
-  {k:"lesson", n:9,  s:"14:50", e:"15:30"},
-  {k:"rest",   n:null, s:"15:30", e:"15:40"},
-  {k:"lesson", n:10, s:"15:40", e:"16:20"},
-  {k:"rest",   n:null, s:"16:20", e:"16:30"},
-  {k:"lesson", n:11, s:"16:30", e:"17:10"},
-  {k:"rest",   n:null, s:"17:10", e:"17:20"},
-  {k:"lesson", n:12, s:"17:20", e:"18:00"}
-];
 
 const BASE_START = 420, BASE_END = 1080;   // 07:00 – 18:00 before any offset
 const STEP = 10, MIN_OFF = -420, MAX_OFF = 360;   // −7 h puts 第 1 节 at 00:00, +6 h puts 第 12 节 at 24:00
-const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60+m; };
 const pad = n => String(n).padStart(2,"0");
-DAY.forEach(d => { d.from = toMin(d.s); d.to = toMin(d.e); d.len = d.to - d.from; });
+
+/* The day is 6 大节 (two 40-min 小节 joined by a 10-min 课间). Between 大节 there is a 10-min 课间,
+   except one slot that holds the 80-min 长休. lunchAfter says which 大节 it follows (1–5; 3 = 第 6 节后). */
+const BLOCKS = 6, LUNCH_DEFAULT = 3;
+let lunchAfter = LUNCH_DEFAULT;
+function buildDay(pos){
+  const list = []; let t = BASE_START;
+  const push = (k, n, len) => { list.push({ k, n, from: t, to: t + len, len }); t += len; };
+  for (let b = 1; b <= BLOCKS; b++){
+    push("lesson", 2*b - 1, 40);
+    push("rest", null, 10);
+    push("lesson", 2*b, 40);
+    if (b < BLOCKS) push(b === pos ? "lunch" : "rest", null, b === pos ? 80 : 10);
+  }
+  return list;
+}
+let DAY = buildDay(lunchAfter);
 
 let off = 0;   // minutes, applied to every time on the page
 
@@ -411,8 +459,8 @@ const end   = () => BASE_END + off;
 
 /* HH:MM; the day never wraps, so the latest possible value is 24:00 */
 const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
-const LUNCH = DAY.find(d => d.k === "lunch");
-const lunchName = () => { const s = LUNCH.from + off; return s >= 630 && s <= 810 ? "午休" : "长休"; };   // 10:30–13:30 start keeps the name
+const lunchSeg = () => DAY.find(d => d.k === "lunch");
+const lunchName = () => { const s = lunchSeg().from + off; return s >= 630 && s <= 810 ? "午休" : "长休"; };   // 10:30–13:30 start keeps the name
 const nameOf = d => d.k === "lesson" ? "第 " + d.n + " 节" : d.k === "lunch" ? lunchName() : "课间";
 const rangeText = d => clock(d.from + off) + " – " + clock(d.to + off) + " · " + d.len + " 分钟";
 const untilLabel = d => d.k === "lesson" ? "距下课" : "距上课";
@@ -427,21 +475,25 @@ function offWords(){
   return ("整体" + (off < 0 ? "提前" : "推后") + " " + (h ? h + " 小时 " : "") + (m ? m + " 分钟" : "")).trim();
 }
 
-/* --- ribbon: structure is built once; times are refreshed on every offset change --- */
+/* --- ribbon: rebuilt when the 长休 moves; times refreshed on every offset change --- */
 const segs = document.getElementById("segs");
-segs.innerHTML = DAY.map((d,i) => {
-  const idx = d.k === "lesson" ? d.n : (d.k === "lunch" ? "—" : "·");
-  return '<li class="seg ' + d.k + '" data-i="' + i + '" style="--min:' + d.len + '">' +
-           '<span class="idx mono">' + idx + '</span>' +
-           '<span class="name">' + nameOf(d) + '</span>' +
-           '<span class="time mono"></span>' +
-         '</li>';
-}).join("");
-const nodes = [...segs.children];
-const timeCells = nodes.map(n => n.querySelector(".time"));
 const axis = document.getElementById("axis");
+let nodes = [], timeCells = [], lunchNode = null;
+function renderRibbon(){
+  segs.innerHTML = DAY.map((d,i) => {
+    const idx = d.k === "lesson" ? d.n : (d.k === "lunch" ? "—" : "·");
+    return '<li class="seg ' + d.k + '" data-i="' + i + '" style="--min:' + d.len + '">' +
+             '<span class="idx mono">' + idx + '</span>' +
+             '<span class="name">' + nameOf(d) + '</span>' +
+             '<span class="time mono"></span>' +
+           '</li>';
+  }).join("");
+  nodes = [...segs.children];
+  timeCells = nodes.map(n => n.querySelector(".time"));
+  lunchNode = nodes[DAY.indexOf(lunchSeg())].querySelector(".name");
+}
+renderRibbon();
 
-const lunchNode = nodes[DAY.indexOf(LUNCH)].querySelector(".name");
 const lunchLabels = [...document.querySelectorAll("[data-lunch]")];
 function renderTimes(){
   DAY.forEach((d, i) => {
@@ -532,9 +584,78 @@ function setOffset(v, persist){
   el.nowChip.textContent = el.axisChip.textContent = chip;
 
   renderTimes();
+  renderLunchReadouts();
   tick();
   if (persist){ try { localStorage.setItem("offsetMin", String(off)); } catch (e) {} }
 }
+
+/* --- 长休 position control --- */
+const lp = {
+  panel: document.getElementById("lunchPanel"),
+  strip: document.getElementById("strip"),
+  reset: document.getElementById("lunchReset"),
+  label: document.getElementById("lunchLabel"),
+  range: document.getElementById("lunchRange"),
+  cap: document.getElementById("lunchCap"),
+  splitV: document.getElementById("splitV"),
+  splitCap: document.getElementById("splitCap"),
+  chip: document.getElementById("lunchChip")
+};
+const CN = ["一","二","三","四","五","六"];
+function renderStrip(){
+  let html = "";
+  for (let b = 1; b <= BLOCKS; b++){
+    html += '<div class="blk" title="第 ' + (2*b-1) + '–' + (2*b) + ' 节"><b>' + CN[b-1] + '</b><small>' + (2*b-1) + '·' + (2*b) + '</small></div>';
+    if (b < BLOCKS){
+      const on = b === lunchAfter;
+      html += '<button class="gap' + (on ? " on" : "") + '" type="button" role="radio" data-pos="' + b + '"' +
+              ' aria-checked="' + on + '" aria-label="长休放在第 ' + (2*b) + ' 节后" tabindex="' + (on ? 0 : -1) + '">' +
+              '<span>' + lunchName() + '</span></button>';
+    }
+  }
+  lp.strip.innerHTML = html;
+}
+function renderLunchReadouts(){
+  const L = lunchSeg(), ln = lunchName(), after = 2 * lunchAfter;
+  lp.label.textContent = ln;
+  lp.range.textContent = clock(L.from + off) + " – " + clock(L.to + off);
+  const d = lunchAfter - LUNCH_DEFAULT;
+  lp.cap.textContent = "第 " + after + " 节后" + (d === 0 ? " · 与原表一致" : " · 比原表" + (d < 0 ? "早" : "晚") + " " + Math.abs(d) + " 大节");
+  lp.splitV.textContent = after + " + " + (12 - after) + " 节";
+  lp.splitCap.textContent = "第 1–" + after + " 节 · 第 " + (after + 1) + "–12 节";
+  lp.chip.hidden = d === 0;
+  lp.chip.textContent = ln + " · 第 " + after + " 节后";
+  lp.strip.querySelectorAll(".gap span").forEach(n => { n.textContent = ln; });
+}
+function setLunch(pos, persist){
+  pos = Math.max(1, Math.min(BLOCKS - 1, Math.round(pos)));
+  lunchAfter = pos;
+  DAY = buildDay(lunchAfter);
+  lp.panel.dataset.pos = pos;
+  lp.reset.disabled = pos === LUNCH_DEFAULT;
+  renderRibbon();
+  renderStrip();
+  renderTimes();
+  renderLunchReadouts();
+  tick();
+  if (persist){ try { localStorage.setItem("lunchAfter", String(pos)); } catch (e) {} }
+}
+lp.strip.addEventListener("click", e => {
+  const g = e.target.closest(".gap"); if (!g) return;
+  setLunch(Number(g.dataset.pos), true);
+  lp.strip.querySelector(".gap.on").focus();
+});
+lp.strip.addEventListener("keydown", e => {
+  if (!e.target.closest(".gap")) return;
+  const dir = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : 0;
+  if (e.key === "Home") { e.preventDefault(); setLunch(1, true); lp.strip.querySelector(".gap.on").focus(); return; }
+  if (e.key === "End")  { e.preventDefault(); setLunch(BLOCKS - 1, true); lp.strip.querySelector(".gap.on").focus(); return; }
+  if (!dir) return;
+  e.preventDefault();
+  setLunch(lunchAfter + dir, true);
+  lp.strip.querySelector(".gap.on").focus();
+});
+lp.reset.addEventListener("click", () => { setLunch(LUNCH_DEFAULT, true); lp.strip.querySelector(".gap.on").focus(); });
 
 const HINT = "范围 −7h ～ +6h，整张表始终落在 00:00 – 24:00 之内 · 拖动或用 ← → 键每次 10 分钟 · 双击滑块复位 · 偏移会记住";
 const hintEl = document.getElementById("hint");
@@ -629,8 +750,12 @@ function tick(){
 }
 
 /* --- boot: restore a remembered offset, then run --- */
-let saved = 0;
-try { const v = parseInt(localStorage.getItem("offsetMin"), 10); if (Number.isFinite(v)) saved = v; } catch (e) {}
+let saved = 0, savedLunch = LUNCH_DEFAULT;
+try {
+  const v = parseInt(localStorage.getItem("offsetMin"), 10); if (Number.isFinite(v)) saved = v;
+  const l = parseInt(localStorage.getItem("lunchAfter"), 10); if (Number.isFinite(l)) savedLunch = l;
+} catch (e) {}
+setLunch(savedLunch, false);
 setOffset(saved, false);
 setInterval(tick, 1000);
 </script>
