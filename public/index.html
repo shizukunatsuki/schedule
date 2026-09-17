@@ -133,6 +133,7 @@ h1{
 .rail{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(12px + 14px);height:2px;background:var(--line)}
 .fill{position:absolute;top:calc(12px + 13px);height:4px;background:var(--accent);left:50%;width:0;transition:none}
 .zero{position:absolute;left:calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--zero));top:calc(12px + 8px);width:1px;height:14px;background:var(--faint);transform:translateX(-50%)}
+.dead{position:absolute;top:calc(12px + 14px);height:2px;right:calc(var(--thumb)/2);width:0;background:repeating-linear-gradient(90deg,var(--faint) 0 2px,transparent 2px 5px);opacity:.7}
 .ticks{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(12px + 22px);height:16px;display:flex;justify-content:space-between}
 .ticks i{position:relative;width:1px;height:4px;background:var(--line);display:block}
 .ticks i.major{height:7px;background:var(--faint)}
@@ -172,8 +173,12 @@ h1{
 .ro-c{margin:0;font-size:12px;color:var(--muted);letter-spacing:.03em;min-height:1.6em}
 #shift[data-off="0"] .ro-v.big{color:var(--muted)}
 #shift:not([data-off="0"]) .ro-v.big{color:var(--accent)}
-.hint{margin:0;font-size:11.5px;color:var(--faint);letter-spacing:.04em;transition:color .3s}
-.hint.hot{color:var(--accent)}
+.hint{margin:0;font-size:11.5px;color:var(--faint);letter-spacing:.04em}
+.foot{position:relative}
+.foot .hint{transition:opacity .25s}
+.flash{position:absolute;inset:0;margin:0;font-size:12px;color:var(--accent);letter-spacing:.03em;opacity:0;pointer-events:none;transition:opacity .25s}
+.foot.hot .hint{opacity:0}
+.foot.hot .flash{opacity:1}
 
 /* ---------- long-break position ---------- */
 .lunchpos{margin-top:12px}
@@ -226,7 +231,7 @@ h1{
 .meter{height:3px;background:var(--sunk);margin-top:6px;overflow:hidden}
 .meter span{display:block;height:100%;width:0;background:var(--accent);transition:width .9s linear}
 .pcount{margin:0;font-size:13px;color:var(--accent);letter-spacing:.04em}
-.status[data-state="off"] .meter{display:none}
+.status[data-state="off"] .meter{visibility:hidden}
 
 /* ---------- ribbon ---------- */
 .legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:11.5px;color:var(--muted)}
@@ -235,7 +240,8 @@ h1{
 .dot.lesson{background:var(--pine)}
 .dot.rest{background:var(--line)}
 .dot.lunch{background:var(--amber)}
-.legend .chip{margin-left:auto}
+.legend-chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.legend-chips .chip{margin-left:0}
 
 .ribbon{position:relative;display:grid;grid-template-columns:var(--gutter) 1fr;height:calc(var(--total, 660) * var(--ppm))}
 .axis{position:relative;border-right:1px solid var(--line)}
@@ -295,6 +301,7 @@ h1{
   .ro:first-child{grid-column:1 / -1}
   .ro-v{font-size:18px}
   .ro-v .was{font-size:13px}
+  .kbd{display:none}
   .strip{height:46px}
   .blk b{font-size:14px}
   .blk small{display:none}
@@ -319,7 +326,7 @@ h1{
   <header class="masthead">
     <p class="eyebrow">作息时刻表</p>
     <h1>一日十二节</h1>
-    <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，每节 40 分钟，课间 10 分钟，午休 80 分钟，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
+    <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，每节 40 分钟，课间 10 分钟，<span data-lunch=" 80 分钟">午休 80 分钟</span>，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
     <p class="livetime mono" id="clock">--:--:--</p>
   </header>
 
@@ -338,6 +345,7 @@ h1{
         <div class="rail"></div>
         <div class="fill" id="fill"></div>
         <div class="zero"></div>
+        <div class="dead" id="dead" title="长休放在一天两端时，最右 10 分钟不可用"></div>
         <div class="ticks" id="ticks" aria-hidden="true"></div>
         <input class="range" id="range" type="range" min="-420" max="360" step="10" value="0"
                aria-label="整体偏移，最早提前 7 小时到 00:00 开始，最晚推后 6 小时到 24:00 结束，步长 10 分钟" aria-valuetext="与原表一致">
@@ -362,7 +370,10 @@ h1{
         <p class="ro-c" id="roEndCap">第 12 节 17:20 – 18:00</p>
       </div>
     </div>
-    <p class="hint" id="hint"></p>
+    <div class="foot" id="foot">
+      <p class="hint">范围 −7h ～ +6h，整张表始终落在 00:00 – 24:00 内 · 双击滑块复位<span class="kbd"> · ← → 键每次 10 分钟</span> · 会记住</p>
+      <p class="flash" id="flash" aria-live="polite"></p>
+    </div>
   </section>
 
   <section class="shift lunchpos" id="lunchPanel" data-pos="3" aria-labelledby="lunchTitle">
@@ -385,7 +396,7 @@ h1{
         <p class="ro-c" id="splitCap">第 1–6 节 · 第 7–12 节</p>
       </div>
     </div>
-    <p class="hint">点任一空位放长休（含一天最前 / 最后，此时全天多 10 分钟课间）· ← → 键前后移一大节 · 大节（两小节连上）不会被拆开 · 位置会记住</p>
+    <p class="hint">点空位放长休，大节（两小节连上）不拆开 · 放在最前 / 最后时全天多 10 分钟<span class="kbd"> · ← → 键前后移一大节</span> · 会记住</p>
   </section>
 
   <section class="status" id="status" aria-live="polite">
@@ -408,8 +419,10 @@ h1{
     <span class="key"><span class="dot rest"></span>课间 10min</span>
     <span class="key"><span class="dot lunch"></span><span data-lunch=" 80min">午休 80min</span></span>
     <span class="key">块高即时长</span>
-    <span class="chip mono" id="axisChip" hidden></span>
-    <span class="chip" id="lunchChip" hidden></span>
+    <span class="legend-chips">
+      <span class="chip mono" id="axisChip" hidden></span>
+      <span class="chip" id="lunchChip" hidden></span>
+    </span>
   </div>
 
   <div class="ribbon" id="ribbon">
@@ -467,7 +480,7 @@ const lastLesson  = () => [...DAY].reverse().find(d => d.k === "lesson");
 /* HH:MM; the day never wraps, so the latest possible value is 24:00 */
 const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
 const lunchSeg = () => DAY.find(d => d.k === "lunch");
-const lunchName = () => { const s = lunchSeg().from + off; return s >= 630 && s <= 810 ? "午休" : "长休"; };   // 10:30–13:30 start keeps the name
+const lunchName = () => { const s = lunchSeg().from + off; return lunchAfter === LUNCH_DEFAULT && s >= 630 && s <= 810 ? "午休" : "长休"; };   // only the original slot, starting 10:30–13:30, is still 午休
 const nameOf = d => d.k === "lesson" ? "第 " + d.n + " 节" : d.k === "lunch" ? lunchName() : "课间";
 const rangeText = d => clock(d.from + off) + " – " + clock(d.to + off) + " · " + d.len + " 分钟";
 const untilLabel = d => d.k === "lesson" ? "距下课" : "距上课";
@@ -531,6 +544,7 @@ const el = {
   shift: document.getElementById("shift"),
   range: document.getElementById("range"),
   fill: document.getElementById("fill"),
+  dead: document.getElementById("dead"),
   reset: document.getElementById("reset"),
   minus: document.getElementById("minus"),
   plus: document.getElementById("plus"),
@@ -577,7 +591,10 @@ function setOffset(v, persist){
   el.plus.disabled  = off >= maxOff();
 
   el.offBig.textContent = offLabel();
-  el.offCap.textContent = offWords();
+  el.offCap.textContent = offWords() + (off === MIN_OFF ? " · 已到一天最早" : off === maxOff() ? " · 已到一天最晚" : "");
+  // stripe the unreachable tail of the rail when the 长休 sits at an end (day is 670 min → ceiling +5:50)
+  const deadFrac = (MAX_OFF - maxOff()) / (MAX_OFF - MIN_OFF);
+  el.dead.style.width = deadFrac ? "calc(" + usable + " * " + deadFrac + ")" : "0";
   const arrow = (was, now) => off === 0
     ? now
     : '<span class="was">' + was + '</span><span class="arr">→</span>' + now;
@@ -586,8 +603,8 @@ function setOffset(v, persist){
   el.roEndL.textContent   = "结束 · " + nameOf(DAY[DAY.length - 1]);
   el.roStart.innerHTML = arrow(clock(BASE_START), clock(start()));
   el.roEnd.innerHTML   = arrow(clock(dayEnd()), clock(end()));
-  el.roStartCap.textContent = (off === MIN_OFF ? "已到一天最早 · " : "") + "第 1 节 " + clock(fl.from + off) + " – " + clock(fl.to + off);
-  el.roEndCap.textContent   = (off === maxOff() ? "已到一天最晚 · " : "") + "第 12 节 " + clock(ll.from + off) + " – " + clock(ll.to + off);
+  el.roStartCap.textContent = "第 1 节 " + clock(fl.from + off) + " – " + clock(fl.to + off);
+  el.roEndCap.textContent   = "第 12 节 " + clock(ll.from + off) + " – " + clock(ll.to + off);
 
   el.ledeStart.textContent = clock(start());
   el.ledeEnd.textContent = clock(end());
@@ -671,15 +688,13 @@ lp.strip.addEventListener("keydown", e => {
 });
 lp.reset.addEventListener("click", () => { setLunch(LUNCH_DEFAULT, true); lp.strip.querySelector(".gap.on").focus(); });
 
-const HINT = "范围 −7h ～ +6h，整张表始终落在 00:00 – 24:00 之内 · 拖动或用 ← → 键每次 10 分钟 · 双击滑块复位 · 偏移会记住";
-const hintEl = document.getElementById("hint");
-hintEl.textContent = HINT;
-let hintTimer = 0;
+const flashEl = document.getElementById("flash"), footEl = document.getElementById("foot");
+let flashTimer = 0;
 function flash(msg){
-  clearTimeout(hintTimer);
-  hintEl.textContent = msg;
-  hintEl.classList.add("hot");
-  hintTimer = setTimeout(() => { hintEl.textContent = HINT; hintEl.classList.remove("hot"); }, 5000);
+  clearTimeout(flashTimer);
+  flashEl.textContent = msg;
+  footEl.classList.add("hot");
+  flashTimer = setTimeout(() => { footEl.classList.remove("hot"); }, 5000);
 }
 
 /* 从现在开始: offset = how late today already is, rounded up to the next 10 min */
@@ -688,8 +703,8 @@ document.getElementById("startNow").addEventListener("click", () => {
   const m = now.getHours() * 60 + now.getMinutes();
   const want = Math.ceil(m / STEP) * STEP - BASE_START;
   setOffset(want, true);
-  if (want > maxOff()) flash("现在 " + clock(m) + " 开工已塞不下整张表，最晚只能 " + clock(BASE_START + maxOff()) + " 开始，已设为 " + offLabel());
-  else flash("开始时间对齐到 " + clock(start()) + "，" + offWords());
+  if (want > maxOff()) flash("已塞不下整张表：最晚 " + clock(BASE_START + maxOff()) + " 开始，已设为 " + offLabel());
+  else flash("开始对齐到 " + clock(start()) + " · " + offWords());
   el.range.focus();
 });
 
