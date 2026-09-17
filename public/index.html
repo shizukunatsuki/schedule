@@ -9,7 +9,7 @@
 <meta name="description" content="07:00–18:00 的作息时刻表，块高即时长，带实时红线、下课倒计时、整体偏移和可移动的 80 分钟休息。">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔔%3C/text%3E%3C/svg%3E">
-<title>一日十二节</title>
+<title>今日课表</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@700&display=swap">
@@ -80,9 +80,29 @@ body{
 .mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
 .serif{font-family:"Noto Serif SC",Georgia,serif;font-weight:700}
 .wrap{max-width:760px;margin:0 auto;padding:36px 20px 72px}
+.layout{display:block}
+.pane{min-width:0}
 button{font:inherit;color:inherit}
 .plabel{margin:0;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);font-family:"IBM Plex Mono",monospace}
 .panel{background:var(--surface);border:1px solid var(--line)}
+
+/* ---------- compact "now" bar for narrow layouts (appears once the now card scrolls away) ---------- */
+.stickybar{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  background:var(--surface);border-bottom:1px solid var(--line);
+  transform:translateY(-100%);transition:transform .25s ease;
+}
+.stickybar.show{transform:translateY(0)}
+.sb-in{
+  width:100%;max-width:760px;margin:0 auto;display:flex;align-items:baseline;gap:12px;
+  padding:9px 20px 8px;border:0;background:none;text-align:left;cursor:pointer;
+}
+.sb-name{font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:16px;white-space:nowrap}
+.sb-range{font-size:12px;color:var(--muted);letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sb-count{margin-left:auto;font-size:12px;color:var(--accent);letter-spacing:.03em;white-space:nowrap}
+.sb-meter{display:block;height:2px;background:var(--sunk)}
+.sb-meter span{display:block;height:100%;width:0;background:var(--accent);transition:width .9s linear}
+.stickybar[data-state="off"] .sb-meter span{width:0 !important}
 
 /* ---------- masthead ---------- */
 .masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
@@ -311,9 +331,32 @@ h1{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:
 .tally dd{margin:0;font-size:17px;letter-spacing:.03em}
 .note{margin:18px 0 0;font-size:12px;color:var(--faint);text-align:center;letter-spacing:.04em}
 
+@media (min-width:1040px){
+  .wrap{max-width:1200px;padding:28px 32px 56px}
+  .layout{display:grid;grid-template-columns:400px minmax(0,1fr);gap:40px;align-items:start}
+  .pane.side{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding:4px 4px 24px 0;margin-top:-4px;scrollbar-width:thin}
+  .masthead{padding-bottom:12px}
+  h1{font-size:30px}
+  .livetime{font-size:22px}
+  .lede{font-size:13px}
+  .now{margin-top:16px;padding:14px 18px}
+  .pname{font-size:26px}
+  .settings{padding:0 18px 12px}
+  .set-row{grid-template-columns:1fr;gap:8px;padding:14px 0 12px}
+  .set-label{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px}
+  .set-val{font-size:18px;text-align:right}
+  .set-val.serif{font-size:15px}
+  .minireset{margin-top:0}
+  .set-foot{flex-direction:column-reverse;align-items:stretch;gap:10px}
+  .btn{align-self:flex-start}
+  .legend{margin-top:6px}
+  .stickybar{display:none}
+}
 @media (max-width:560px){
   :root{--ppm:1.7px;--gutter:46px;--spine:24px}
   .wrap{padding:26px 14px 56px}
+  .sb-in{padding:8px 14px 7px;gap:8px}
+  .sb-range{display:none}
   .livetime{font-size:20px}
   .now{padding:14px 14px 14px}
   .pname{font-size:26px}
@@ -343,11 +386,23 @@ h1{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:
 </style>
 </head>
 <body>
+<div class="stickybar" id="stickybar" aria-hidden="true">
+  <button type="button" class="sb-in" id="sbBtn" tabindex="-1">
+    <span class="plabel">现在</span>
+    <span class="sb-name" id="sbName">—</span>
+    <span class="sb-range mono" id="sbRange"></span>
+    <span class="sb-count mono" id="sbCount"></span>
+  </button>
+  <span class="sb-meter"><span id="sbFill"></span></span>
+</div>
+
 <div class="wrap">
+<div class="layout">
+<div class="pane side" id="side">
   <header class="masthead">
     <div>
-      <p class="eyebrow">作息时刻表</p>
-      <h1>一日十二节</h1>
+      <p class="eyebrow">一日 12 节 · 6 大节</p>
+      <h1>今日课表</h1>
     </div>
     <div class="clockbox">
       <p class="livetime mono" id="clock">--:--:--</p>
@@ -419,7 +474,9 @@ h1{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:
       <button class="btn" id="startNow" type="button" title="把开始时间对齐到现在（取整到 10 分钟）">从现在开始</button>
     </div>
   </section>
+</div>
 
+<div class="pane main">
   <div class="legend">
     <span class="key"><span class="dot lesson"></span>上课 40min</span>
     <span class="key"><span class="dot rest"></span>休息 10min</span>
@@ -445,6 +502,8 @@ h1{margin:0;font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:
     <div><dt>休息次数</dt><dd class="mono" id="tallyCount">11 次</dd></div>
   </dl>
   <p class="note">红线随本机时间移动 · 上课时段自动高亮 · 每段时长不随偏移或休息位置改变</p>
+</div>
+</div>
 </div>
 
 <script>
@@ -513,7 +572,8 @@ const el = {
   startNow: $("startNow"), foot: $("foot"), flash: $("flash"),
   axisChip: $("axisChip"), lunchChip: $("lunchChip"),
   ribbon: $("ribbon"), axis: $("axis"), spines: $("spines"), segs: $("segs"), line: $("nowline"), pill: $("nowpill"),
-  tallyAll: $("tallyAll"), tallyRest: $("tallyRest"), tallyCount: $("tallyCount")
+  tallyAll: $("tallyAll"), tallyRest: $("tallyRest"), tallyCount: $("tallyCount"),
+  bar: $("stickybar"), sbName: $("sbName"), sbRange: $("sbRange"), sbCount: $("sbCount"), sbFill: $("sbFill")
 };
 
 /* ---------- ribbon + overview: rebuilt when the break moves ---------- */
@@ -749,7 +809,7 @@ function tick(){
     el.status.dataset.state = "on";
     el.nowName.textContent = nameOf(cur);
     el.nowRange.textContent = rangeText(cur);
-    el.meter.style.width = (((mins - cur.from - off) / cur.len) * 100).toFixed(2) + "%";
+    el.meter.style.width = el.sbFill.style.width = (((mins - cur.from - off) / cur.len) * 100).toFixed(2) + "%";
     el.nowCount.textContent = untilLabel(cur) + " " + countdown((cur.to + off) * 60 - secs);
     el.nextName.textContent = nxt ? nameOf(nxt) : "放学";
     el.nextRange.textContent = nxt ? rangeText(nxt) : clock(end()) + " 之后自由安排";
@@ -771,6 +831,11 @@ function tick(){
     }
   }
 
+  el.bar.dataset.state = el.status.dataset.state;
+  el.sbName.textContent = el.nowName.textContent;
+  el.sbRange.textContent = el.nowRange.textContent;
+  el.sbCount.textContent = el.nowCount.textContent;
+
   if (!scrolled){
     scrolled = true;
     if (ci !== -1){
@@ -779,6 +844,17 @@ function tick(){
     }
   }
 }
+
+/* ---------- compact bar: only in the single-column layout, only while the now card is off-screen ---------- */
+const wide = window.matchMedia("(min-width:1040px)");
+let nowCardVisible = true;
+function syncBar(){ el.bar.classList.toggle("show", !wide.matches && !nowCardVisible); }
+new IntersectionObserver(entries => { nowCardVisible = entries[0].isIntersecting; syncBar(); }, { threshold: 0.05 }).observe(el.status);
+wide.addEventListener("change", syncBar);
+$("sbBtn").addEventListener("click", () => {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+});
 
 /* ---------- boot ---------- */
 let saved = 0, savedLunch = LUNCH_DEFAULT;
