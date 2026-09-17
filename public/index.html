@@ -182,12 +182,12 @@ h1{
   flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
   background:var(--pine-soft);color:var(--pine);border:1px solid var(--line);border-left:0;
 }
-.blk:first-child{border-left:1px solid var(--line)}
+.strip > :first-child{border-left:1px solid var(--line)}
 .blk b{font-family:"Noto Serif SC",Georgia,serif;font-weight:700;font-size:16px;line-height:1.1}
 .blk small{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;opacity:.8}
 .gap{
-  flex:0 0 22px;position:relative;margin:0;padding:0;border:0;background:var(--sunk);cursor:pointer;
-  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  flex:0 0 22px;position:relative;margin:0;padding:0;background:var(--sunk);cursor:pointer;
+  border:1px solid var(--line);border-left:0;
   transition:flex-basis .25s ease,background .15s ease;
 }
 .gap::before{content:"";position:absolute;left:50%;top:10px;bottom:10px;width:0;border-left:1px dotted var(--faint);transform:translateX(-50%);transition:opacity .15s}
@@ -237,7 +237,7 @@ h1{
 .dot.lunch{background:var(--amber)}
 .legend .chip{margin-left:auto}
 
-.ribbon{position:relative;display:grid;grid-template-columns:var(--gutter) 1fr;height:calc(660 * var(--ppm))}
+.ribbon{position:relative;display:grid;grid-template-columns:var(--gutter) 1fr;height:calc(var(--total, 660) * var(--ppm))}
 .axis{position:relative;border-right:1px solid var(--line)}
 .tick{position:absolute;right:0;top:calc(var(--at) * var(--ppm));transform:translateY(-50%);padding-right:12px;font-size:11px;color:var(--faint);letter-spacing:.04em}
 .tick::after{content:"";position:absolute;right:-1px;top:50%;width:5px;height:1px;background:var(--line)}
@@ -352,14 +352,14 @@ h1{
         <p class="ro-c" id="offCap">与原表一致</p>
       </div>
       <div class="ro">
-        <p class="ro-l">第 1 节上课</p>
+        <p class="ro-l" id="roStartL">开始 · 第 1 节</p>
         <p class="ro-v mono" id="roStart">07:00</p>
-        <p class="ro-c" id="roStartCap">原 07:00</p>
+        <p class="ro-c" id="roStartCap">第 1 节 07:00 – 07:40</p>
       </div>
       <div class="ro">
-        <p class="ro-l">第 12 节下课</p>
+        <p class="ro-l" id="roEndL">结束 · 第 12 节</p>
         <p class="ro-v mono" id="roEnd">18:00</p>
-        <p class="ro-c" id="roEndCap">原 18:00</p>
+        <p class="ro-c" id="roEndCap">第 12 节 17:20 – 18:00</p>
       </div>
     </div>
     <p class="hint" id="hint"></p>
@@ -385,7 +385,7 @@ h1{
         <p class="ro-c" id="splitCap">第 1–6 节 · 第 7–12 节</p>
       </div>
     </div>
-    <p class="hint">点两大节之间的空位放长休 · ← → 键前后移一大节 · 大节（两小节连上）不会被拆开 · 位置会记住</p>
+    <p class="hint">点任一空位放长休（含一天最前 / 最后，此时全天多 10 分钟课间）· ← → 键前后移一大节 · 大节（两小节连上）不会被拆开 · 位置会记住</p>
   </section>
 
   <section class="status" id="status" aria-live="polite">
@@ -429,33 +429,40 @@ h1{
 
 <script>
 
-const BASE_START = 420, BASE_END = 1080;   // 07:00 – 18:00 before any offset
+const BASE_START = 420;                    // 07:00 before any offset; the end depends on where the 长休 sits
 const STEP = 10, MIN_OFF = -420, MAX_OFF = 360;   // −7 h puts 第 1 节 at 00:00, +6 h puts 第 12 节 at 24:00
 const pad = n => String(n).padStart(2,"0");
 
 /* The day is 6 大节 (two 40-min 小节 joined by a 10-min 课间). Between 大节 there is a 10-min 课间,
-   except one slot that holds the 80-min 长休. lunchAfter says which 大节 it follows (1–5; 3 = 第 6 节后). */
+   except one slot that holds the 80-min 长休. lunchAfter says which 大节 it follows: 1–5 between 大节,
+   0 = before 第 1 节, 6 = after 第 12 节 (then all five 课间 stay and the day is 670 min instead of 660). */
 const BLOCKS = 6, LUNCH_DEFAULT = 3;
 let lunchAfter = LUNCH_DEFAULT;
 function buildDay(pos){
   const list = []; let t = BASE_START;
   const push = (k, n, len) => { list.push({ k, n, from: t, to: t + len, len }); t += len; };
+  if (pos === 0) push("lunch", null, 80);
   for (let b = 1; b <= BLOCKS; b++){
     push("lesson", 2*b - 1, 40);
     push("rest", null, 10);
     push("lesson", 2*b, 40);
     if (b < BLOCKS) push(b === pos ? "lunch" : "rest", null, b === pos ? 80 : 10);
   }
+  if (pos === BLOCKS) push("lunch", null, 80);
   return list;
 }
 let DAY = buildDay(lunchAfter);
 
 let off = 0;   // minutes, applied to every time on the page
 
-const clampOff = v => Math.max(MIN_OFF, Math.min(MAX_OFF, Math.round(v / STEP) * STEP));
-const ZERO_POS = (0 - MIN_OFF) / (MAX_OFF - MIN_OFF);   // where 0 sits on the rail
+const dayEnd = () => DAY[DAY.length - 1].to;             // 18:00, or 18:10 with the 长休 at either end
+const maxOff = () => 1440 - dayEnd();                    // keeps the whole table inside the day
+const clampOff = v => Math.max(MIN_OFF, Math.min(maxOff(), Math.round(v / STEP) * STEP));
+const ZERO_POS = (0 - MIN_OFF) / (MAX_OFF - MIN_OFF);   // where 0 sits on the rail (slider geometry stays fixed)
 const start = () => BASE_START + off;
-const end   = () => BASE_END + off;
+const end   = () => dayEnd() + off;
+const firstLesson = () => DAY.find(d => d.k === "lesson");
+const lastLesson  = () => [...DAY].reverse().find(d => d.k === "lesson");
 
 /* HH:MM; the day never wraps, so the latest possible value is 24:00 */
 const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
@@ -531,6 +538,8 @@ const el = {
   offCap: document.getElementById("offCap"),
   roStart: document.getElementById("roStart"),
   roEnd: document.getElementById("roEnd"),
+  roStartL: document.getElementById("roStartL"),
+  roEndL: document.getElementById("roEndL"),
   roStartCap: document.getElementById("roStartCap"),
   roEndCap: document.getElementById("roEndCap"),
   ledeStart: document.getElementById("ledeStart"),
@@ -565,17 +574,20 @@ function setOffset(v, persist){
 
   el.reset.disabled = off === 0;
   el.minus.disabled = off <= MIN_OFF;
-  el.plus.disabled  = off >= MAX_OFF;
+  el.plus.disabled  = off >= maxOff();
 
   el.offBig.textContent = offLabel();
   el.offCap.textContent = offWords();
   const arrow = (was, now) => off === 0
     ? now
     : '<span class="was">' + was + '</span><span class="arr">→</span>' + now;
-  el.roStart.innerHTML = arrow("07:00", clock(start()));
-  el.roEnd.innerHTML   = arrow("18:00", clock(end()));
-  el.roStartCap.textContent = off === 0 ? "原 07:00" : off === MIN_OFF ? "已到一天最早 · 00:00 – 00:40" : "第 1 节 " + clock(start()) + " – " + clock(start() + 40);
-  el.roEndCap.textContent   = off === 0 ? "原 18:00" : off === MAX_OFF ? "已到一天最晚 · 23:20 – 24:00" : "第 12 节 " + clock(end() - 40) + " – " + clock(end());
+  const fl = firstLesson(), ll = lastLesson();
+  el.roStartL.textContent = "开始 · " + nameOf(DAY[0]);
+  el.roEndL.textContent   = "结束 · " + nameOf(DAY[DAY.length - 1]);
+  el.roStart.innerHTML = arrow(clock(BASE_START), clock(start()));
+  el.roEnd.innerHTML   = arrow(clock(dayEnd()), clock(end()));
+  el.roStartCap.textContent = (off === MIN_OFF ? "已到一天最早 · " : "") + "第 1 节 " + clock(fl.from + off) + " – " + clock(fl.to + off);
+  el.roEndCap.textContent   = (off === maxOff() ? "已到一天最晚 · " : "") + "第 12 节 " + clock(ll.from + off) + " – " + clock(ll.to + off);
 
   el.ledeStart.textContent = clock(start());
   el.ledeEnd.textContent = clock(end());
@@ -602,16 +614,18 @@ const lp = {
   chip: document.getElementById("lunchChip")
 };
 const CN = ["一","二","三","四","五","六"];
+function gapHTML(pos){
+  const on = pos === lunchAfter;
+  const where = pos === 0 ? "一天最前" : pos === BLOCKS ? "一天最后" : "第 " + (2*pos) + " 节后";
+  return '<button class="gap' + (on ? " on" : "") + '" type="button" role="radio" data-pos="' + pos + '"' +
+         ' aria-checked="' + on + '" aria-label="长休放在' + where + '" tabindex="' + (on ? 0 : -1) + '">' +
+         '<span>' + lunchName() + '</span></button>';
+}
 function renderStrip(){
-  let html = "";
+  let html = gapHTML(0);
   for (let b = 1; b <= BLOCKS; b++){
     html += '<div class="blk" title="第 ' + (2*b-1) + '–' + (2*b) + ' 节"><b>' + CN[b-1] + '</b><small>' + (2*b-1) + '·' + (2*b) + '</small></div>';
-    if (b < BLOCKS){
-      const on = b === lunchAfter;
-      html += '<button class="gap' + (on ? " on" : "") + '" type="button" role="radio" data-pos="' + b + '"' +
-              ' aria-checked="' + on + '" aria-label="长休放在第 ' + (2*b) + ' 节后" tabindex="' + (on ? 0 : -1) + '">' +
-              '<span>' + lunchName() + '</span></button>';
-    }
+    html += gapHTML(b);
   }
   lp.strip.innerHTML = html;
 }
@@ -620,24 +634,24 @@ function renderLunchReadouts(){
   lp.label.textContent = ln;
   lp.range.textContent = clock(L.from + off) + " – " + clock(L.to + off);
   const d = lunchAfter - LUNCH_DEFAULT;
-  lp.cap.textContent = "第 " + after + " 节后" + (d === 0 ? " · 与原表一致" : " · 比原表" + (d < 0 ? "早" : "晚") + " " + Math.abs(d) + " 大节");
+  const where = lunchAfter === 0 ? "一天最前" : lunchAfter === BLOCKS ? "一天最后" : "第 " + after + " 节后";
+  lp.cap.textContent = where + (d === 0 ? " · 与原表一致" : " · 比原表" + (d < 0 ? "早" : "晚") + " " + Math.abs(d) + " 大节");
   lp.splitV.textContent = after + " + " + (12 - after) + " 节";
-  lp.splitCap.textContent = "第 1–" + after + " 节 · 第 " + (after + 1) + "–12 节";
+  lp.splitCap.textContent = lunchAfter === 0 ? "长休在前 · 第 1–12 节连上" : lunchAfter === BLOCKS ? "第 1–12 节连上 · 长休在后" : "第 1–" + after + " 节 · 第 " + (after + 1) + "–12 节";
   lp.chip.hidden = d === 0;
-  lp.chip.textContent = ln + " · 第 " + after + " 节后";
+  lp.chip.textContent = ln + " · " + where;
   lp.strip.querySelectorAll(".gap span").forEach(n => { n.textContent = ln; });
 }
 function setLunch(pos, persist){
-  pos = Math.max(1, Math.min(BLOCKS - 1, Math.round(pos)));
+  pos = Math.max(0, Math.min(BLOCKS, Math.round(pos)));
   lunchAfter = pos;
   DAY = buildDay(lunchAfter);
   lp.panel.dataset.pos = pos;
   lp.reset.disabled = pos === LUNCH_DEFAULT;
+  document.getElementById("ribbon").style.setProperty("--total", dayEnd() - BASE_START);
   renderRibbon();
   renderStrip();
-  renderTimes();
-  renderLunchReadouts();
-  tick();
+  setOffset(off, false);   // re-clamps the offset to the (possibly shorter) day and refreshes every readout
   if (persist){ try { localStorage.setItem("lunchAfter", String(pos)); } catch (e) {} }
 }
 lp.strip.addEventListener("click", e => {
@@ -648,8 +662,8 @@ lp.strip.addEventListener("click", e => {
 lp.strip.addEventListener("keydown", e => {
   if (!e.target.closest(".gap")) return;
   const dir = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : 0;
-  if (e.key === "Home") { e.preventDefault(); setLunch(1, true); lp.strip.querySelector(".gap.on").focus(); return; }
-  if (e.key === "End")  { e.preventDefault(); setLunch(BLOCKS - 1, true); lp.strip.querySelector(".gap.on").focus(); return; }
+  if (e.key === "Home") { e.preventDefault(); setLunch(0, true); lp.strip.querySelector(".gap.on").focus(); return; }
+  if (e.key === "End")  { e.preventDefault(); setLunch(BLOCKS, true); lp.strip.querySelector(".gap.on").focus(); return; }
   if (!dir) return;
   e.preventDefault();
   setLunch(lunchAfter + dir, true);
@@ -674,8 +688,8 @@ document.getElementById("startNow").addEventListener("click", () => {
   const m = now.getHours() * 60 + now.getMinutes();
   const want = Math.ceil(m / STEP) * STEP - BASE_START;
   setOffset(want, true);
-  if (want > MAX_OFF) flash("现在 " + clock(m) + " 开工已塞不下整张表，最晚只能 13:00 开始，已设为 +6:00");
-  else flash("第 1 节对齐到 " + clock(start()) + "，" + offWords());
+  if (want > maxOff()) flash("现在 " + clock(m) + " 开工已塞不下整张表，最晚只能 " + clock(BASE_START + maxOff()) + " 开始，已设为 " + offLabel());
+  else flash("开始时间对齐到 " + clock(start()) + "，" + offWords());
   el.range.focus();
 });
 
@@ -727,15 +741,15 @@ function tick(){
     el.meter.style.width = "0%";
     if (mins < start()){
       el.nowName.textContent = "还没开始";
-      el.nowRange.textContent = "第 1 节 " + clock(start()) + " 打铃";
-      el.nowCount.textContent = "距上课 " + countdown(start() * 60 - secs);
-      el.nextName.textContent = "第 1 节";
+      el.nowRange.textContent = nameOf(DAY[0]) + " " + clock(start()) + " 开始";
+      el.nowCount.textContent = "距开始 " + countdown(start() * 60 - secs);
+      el.nextName.textContent = nameOf(DAY[0]);
       el.nextRange.textContent = rangeText(DAY[0]);
     } else {
       el.nowName.textContent = "今日已放学";
-      el.nowRange.textContent = "第 12 节 " + clock(end()) + " 结束";
-      el.nowCount.textContent = "距明早第 1 节 " + countdown((start() + 1440) * 60 - secs);
-      el.nextName.textContent = "第 1 节";
+      el.nowRange.textContent = nameOf(DAY[DAY.length - 1]) + " " + clock(end()) + " 结束";
+      el.nowCount.textContent = "距明早开始 " + countdown((start() + 1440) * 60 - secs);
+      el.nextName.textContent = nameOf(DAY[0]);
       el.nextRange.textContent = rangeText(DAY[0]) + " · 明天";
     }
   }
