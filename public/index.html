@@ -259,7 +259,7 @@ h1{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino
 }
 .strip > :first-child{border-left:1px solid var(--line)}
 .blk b{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;font-weight:700;font-size:15px;line-height:1.1}
-.blk small{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;letter-spacing:.06em}
+.blk small{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11px;letter-spacing:.02em;white-space:nowrap}
 .gap{
   flex:0 0 26px;position:relative;margin:0;padding:0;background:var(--sunk);cursor:pointer;
   border:1px solid var(--line);border-left:0;
@@ -393,6 +393,11 @@ h1{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino
   .btn{align-self:flex-start}
   .legend{margin-top:6px}
   .stickybar{display:none}
+  /* 400px pane: slimmer slots so every 大节 block still fits its "11·12" label */
+  .gap{flex-basis:16px}
+  .gap.on{flex-basis:46px}
+  .gap span{font-size:12px;letter-spacing:.04em}
+  .blk small{letter-spacing:0}
 }
 @media (max-width:560px){
   :root{--ppm:1.7px;--gutter:46px;--spine:24px}
