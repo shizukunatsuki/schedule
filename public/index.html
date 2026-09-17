@@ -101,7 +101,7 @@ body{
   font-variant-numeric:tabular-nums;
 }
 .mono{font-variant-numeric:tabular-nums}
-.serif{font-weight:600}
+.display{font-weight:600}
 .wrap{max-width:760px;margin:0 auto;padding:36px 20px 72px}
 .layout{display:block}
 .pane{min-width:0}
@@ -172,7 +172,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 .set-row{display:grid;grid-template-columns:120px 1fr;gap:16px;padding:14px 0 12px;border-bottom:1px solid var(--line);align-items:start}
 .set-label{display:flex;flex-direction:column;gap:2px;min-width:0}
 .set-val{margin:0;font-size:var(--fs-title);font-weight:600;line-height:1.2;white-space:nowrap;color:var(--muted);transition:color var(--t-fast)}
-.set-val.serif{font-size:var(--fs-head)}
+.set-val.display{font-size:var(--fs-head)}
 .settings:not([data-off="0"]) .set-val.off{color:var(--pink)}
 .settings:not([data-pos="3"]) .set-val.pos{color:var(--grass)}
 .minireset{
@@ -329,22 +329,21 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 .seg .idx{font-size:var(--fs-sub);font-weight:600;color:var(--sky)}
 .seg .name{font-size:var(--fs-body);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg .time{font-size:var(--fs-sub);color:var(--muted)}
-.seg{--row-bg:var(--surface)}
-.seg.rest{--row-bg:var(--sunk);background:var(--sunk)}
+.seg.rest{background:var(--sunk)}
 .seg.rest .name{font-size:var(--fs-foot);font-weight:500;color:var(--faint)}
 .seg.rest .time{font-size:var(--fs-foot);color:var(--faint)}
 .seg.rest .idx{font-size:var(--fs-foot);color:var(--faint)}
-.seg.rest.inner{--row-bg:var(--surface);background:var(--surface)}
+.seg.rest.inner{background:var(--surface)}
 .seg.rest.inner .name::after{content:" · 大节内"}
-.seg.lunch{--row-bg:var(--grass-soft);background:var(--grass-soft)}
+.seg.lunch{background:var(--grass-soft)}
 .seg.lunch .name{font-weight:600;font-size:var(--fs-head);letter-spacing:.06em;color:var(--grass)}
 .seg.lunch .idx,.seg.lunch .time{color:var(--grass)}
-.seg.past{--row-bg:var(--sunk);background:var(--sunk)}
+.seg.past{background:var(--sunk)}
 .seg.past .name{font-weight:500;color:var(--muted)}
 .seg.past .idx,.seg.past .time{color:var(--faint)}
-.seg.rest.past{--row-bg:var(--sunk);background:var(--sunk)}
+.seg.rest.past{background:var(--sunk)}
 /* the current row fills from the top as time passes; the fill's edge is "now", so nothing crosses the text */
-.seg.current{--row-bg:var(--pink-soft);background:linear-gradient(to bottom, var(--pink-fill) 0 var(--prog, 0%), var(--pink-soft) var(--prog, 0%) 100%)}
+.seg.current{background:linear-gradient(to bottom, var(--pink-fill) 0 var(--prog, 0%), var(--pink-soft) var(--prog, 0%) 100%)}
 .seg:first-child{border-radius:var(--r-lg) var(--r-lg) 0 0}
 .seg:last-child{border-radius:0 0 var(--r-lg) var(--r-lg);border-bottom:0}
 .seg.current .name{color:var(--pink-deep)}
@@ -374,7 +373,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
   .set-row{grid-template-columns:1fr;gap:8px;padding:12px 0 10px}
   .set-label{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px}
   .set-val{font-size:var(--fs-head);text-align:right}
-  .set-val.serif{font-size:var(--fs-body)}
+  .set-val.display{font-size:var(--fs-body)}
   .minireset{margin-top:0}
   .set-foot{flex-direction:column-reverse;align-items:stretch;gap:10px;padding-top:10px}
   .btn{align-self:flex-start}
@@ -402,7 +401,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
   .set-row{grid-template-columns:1fr;gap:10px}
   .set-label{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px}
   .set-val{font-size:var(--fs-head);text-align:right}
-  .set-val.serif{font-size:var(--fs-body)}
+  .set-val.display{font-size:var(--fs-body)}
   .minireset{margin-top:0}
   .set-foot{flex-direction:column-reverse;align-items:stretch}
   .btn{align-self:flex-start}
@@ -419,9 +418,14 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
   .tally{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:420px){
+  :root{--gutter:42px}
+  .seg .dur{display:none}
   .ticks i.major:not(.zero-tick):not(.end)::after{content:none}
-  .gap{flex-basis:20px}
-  .gap.on{flex-basis:44px}
+  .gap{flex-basis:16px}
+  .gap.on{flex-basis:40px}
+  .gap.none{flex-basis:30px;margin-left:4px}
+  .gap.none.on{flex-basis:34px}
+  .gap span{font-size:var(--fs-caption)}
   .blk b{font-size:var(--fs-foot)}
   .nudge{width:36px;height:36px}
 }
@@ -517,7 +521,7 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
     <div class="set-row">
       <div class="set-label">
         <p class="plabel">80 min 休息</p>
-        <p class="set-val pos serif" id="lunchBig">第 6 节后</p>
+        <p class="set-val pos display" id="lunchBig">第 6 节后</p>
         <button class="minireset" id="lunchReset" type="button" disabled>复位到第 6 节后</button>
       </div>
       <div class="set-body">
@@ -683,7 +687,7 @@ function renderRibbon(){
 
 function renderTimes(){
   DAY.forEach((d, i) => {
-    timeCells[i].textContent = clock(d.from + off) + "–" + clock(d.to + off) + " · " + d.len + " min";
+    timeCells[i].innerHTML = clock(d.from + off) + "–" + clock(d.to + off) + '<span class="dur"> · ' + d.len + " min</span>";
   });
   // daylight along the axis, mirrored about noon: night ≤04:00 · glow 06:30 · clear 09:00–15:00 · glow 17:30 · night ≥20:00
   const span = end() - start();
@@ -871,7 +875,7 @@ function tick(){
   el.clock.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
   el.today.textContent = pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + " 周" + WD[now.getDay()];
 
-  const inDay = mins >= start() && mins <= end();
+  const inDay = mins >= start() && mins < end();
   el.line.hidden = !inDay;
   ovNow.hidden = !inDay;
   if (inDay){
