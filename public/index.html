@@ -6,17 +6,18 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F8F7F9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#262931" media="(prefers-color-scheme: dark)">
-<meta name="description" content="07:00–18:00 的作息时刻表，块高即时长，带实时红线、下课倒计时、整体偏移和可移动的 80 min 休息。">
+<meta name="description" content="固定周课表：每天上午、下午、晚上各一节，六科间隔按节数均匀，整周全局显示，按今天高亮。">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌸%3C/text%3E%3C/svg%3E">
-<title>一日十二节</title>
+<title>一周二十一节</title>
 
 <style>
 :root{
   /* 空気系 / 日常系 tokens — bright diffused daylight, mostly white, colour only as gentle tints,
-     thin tinted lines instead of black ones (色トレス), nothing that "hits". Roles: 上课 = 空色 sky,
-     休息 = 若草 grass, 現在 = 桜 pink. Each hue: soft fill / mark (bars & outlines ≥3:1) / text (≥4.5:1).
-     Verified on white, on the page ground and on the soft fills, both themes. */
+     thin tinted lines instead of black ones (色トレス), nothing that "hits".
+     Six subjects, six hues; 桜 pink is the emotional centre and belongs to "today" alone.
+     Each hue: soft fill / mark (borders & dots ≥3:1) / text (≥4.5:1), verified on white,
+     on the page ground, on sunk and on its own soft, both themes. */
   --bg:#F8F7F9;
   --light1:rgba(252,214,226,.55);   /* morning pink, top-left */
   --light2:rgba(214,232,247,.6);    /* sky, top-right */
@@ -28,20 +29,21 @@
   --faint:#6E6878;
   --hair:#8F8899;
   --line:#E9E4EC;
-  --pink:#A8416A;    --pink-mark:#CC6A8E;   --pink-soft:#FCE6ED;   --pink-deep:#8F345A;  --pink-fill:#F5CCDA;
-  --sky:#3D6E97;     --sky-mark:#5590C2;    --sky-soft:#E2EFF9;
-  --grass:#4C7541;   --grass-mark:#6BA254;  --grass-soft:#E8F3E1;
+  /* today = 桜 sakura */
+  --pink:#A8416A;    --pink-mark:#C36286;   --pink-soft:#FCE6ED;
+  /* subjects */
+  --sky:#3D6E97;     --sky-mark:#4F87B8;    --sky-soft:#E2EFF9;     /* 数学 */
+  --fuji:#5F4A93;    --fuji-mark:#8B72BE;   --fuji-soft:#ECE7F6;    /* 语文 */
+  --honey:#7A5A12;   --honey-mark:#B3842A;  --honey-soft:#FFF3D6;   /* 历史 */
+  --grass:#4C7541;   --grass-mark:#5E9049;  --grass-soft:#E8F3E1;   /* 政治 */
+  --mint:#2F6B5C;    --mint-mark:#458E80;   --mint-soft:#DFF2EF;    /* 地理 */
+  --coral:#95452B;   --coral-mark:#C06A4E;  --coral-soft:#FBE8E1;   /* 日语 */
   --shadow:120,90,110;
-  --day-glow:rgba(252,214,226,.55);  --day-noon:transparent;  --day-night:rgba(205,212,236,.5);   /* 桜 glow at dawn and dusk alike, blue-grey night */
-  --ppm:1.9px;
-  --gutter:56px;
-  --spine:30px;
-  --thumb:20px;
   /* one type scale (HIG: caption 11 / footnote 12 / subhead 13 / body 15 / headline 17 / title 22 / title-1 26 / large 30) */
   --fs-caption:11px; --fs-foot:12px; --fs-sub:13px; --fs-body:15px; --fs-head:17px; --fs-title:22px; --fs-title1:26px; --fs-large:30px;
   /* one radius scale */
   --r-lg:14px; --r-md:10px; --r-sm:6px; --r-xs:3px;
-  /* one motion scale; the only long one is the progress meter */
+  /* one motion scale */
   --t-fast:.2s; --t-med:.3s; --ease:cubic-bezier(.25,.6,.3,1);
 }
 @media (prefers-color-scheme: dark){
@@ -57,11 +59,14 @@
     --faint:#B9B2C0;
     --hair:#7F7A88;
     --line:#3E424C;
-    --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;   --pink-deep:#F2B3C6;  --pink-fill:#5E3C4A;
+    --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;
     --sky:#A9CBEA;     --sky-mark:#7FB0DC;    --sky-soft:#25384A;
+    --fuji:#C9B8EC;    --fuji-mark:#A78FD6;   --fuji-soft:#373050;
+    --honey:#E8C87E;   --honey-mark:#D3A94F;  --honey-soft:#453A20;
     --grass:#B9DBA7;   --grass-mark:#8FC077;  --grass-soft:#2B3D27;
+    --mint:#9FD8C6;    --mint-mark:#6FBFA9;   --mint-soft:#233B36;
+    --coral:#EDB49C;   --coral-mark:#D68A6C;  --coral-soft:#4A3028;
     --shadow:0,0,0;
-    --day-glow:rgba(224,138,166,.10);  --day-noon:transparent;  --day-night:rgba(127,150,220,.12);
   }
 }
 :root[data-theme="dark"]{
@@ -76,11 +81,14 @@
   --faint:#B9B2C0;
   --hair:#7F7A88;
   --line:#3E424C;
-  --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;   --pink-deep:#F2B3C6;  --pink-fill:#5E3C4A;
+  --pink:#F2B3C6;    --pink-mark:#E08AA6;   --pink-soft:#4A3039;
   --sky:#A9CBEA;     --sky-mark:#7FB0DC;    --sky-soft:#25384A;
+  --fuji:#C9B8EC;    --fuji-mark:#A78FD6;   --fuji-soft:#373050;
+  --honey:#E8C87E;   --honey-mark:#D3A94F;  --honey-soft:#453A20;
   --grass:#B9DBA7;   --grass-mark:#8FC077;  --grass-soft:#2B3D27;
+  --mint:#9FD8C6;    --mint-mark:#6FBFA9;   --mint-soft:#233B36;
+  --coral:#EDB49C;   --coral-mark:#D68A6C;  --coral-soft:#4A3028;
   --shadow:0,0,0;
-  --day-glow:rgba(224,138,166,.10);  --day-noon:transparent;  --day-night:rgba(127,150,220,.12);
 }
 
 *{box-sizing:border-box}
@@ -101,30 +109,9 @@ body{
   font-variant-numeric:tabular-nums;
 }
 .mono{font-variant-numeric:tabular-nums}
-.display{font-weight:600}
-.wrap{max-width:760px;margin:0 auto;padding:36px 20px 72px}
-.layout{display:block}
-.pane{min-width:0}
-button{font:inherit;color:inherit}
-.plabel{margin:0;font-size:var(--fs-foot);font-weight:600;color:var(--muted)}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 6px 24px -18px rgba(var(--shadow),.35)}
+.wrap{max-width:960px;margin:0 auto;padding:36px 20px 64px}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-
-/* ---------- compact "now" bar for narrow layouts ---------- */
-.stickybar{
-  position:fixed;top:0;left:0;right:0;z-index:20;
-  background:color-mix(in srgb, var(--surface) 90%, transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--line);box-shadow:0 6px 20px -16px rgba(var(--shadow),.4);
-  transform:translateY(-100%);transition:transform var(--t-med) var(--ease);
-}
-.stickybar.show{transform:translateY(0)}
-.sb-in{width:100%;max-width:760px;margin:0 auto;display:flex;align-items:baseline;gap:12px;padding:calc(9px + env(safe-area-inset-top)) 20px 8px;border:0;background:none;text-align:left;cursor:pointer}
-.sb-name{font-weight:600;font-size:var(--fs-head);white-space:nowrap}
-.sb-range{font-size:var(--fs-sub);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.sb-count{margin-left:auto;font-size:var(--fs-sub);font-weight:600;color:var(--pink);white-space:nowrap}
-.sb-meter{display:block;height:3px;background:var(--sunk)}
-.sb-meter span{display:block;height:100%;width:0;background:var(--pink-mark);transition:width .9s linear}
-.stickybar[data-state="off"] .sb-meter span{width:0 !important}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 6px 24px -18px rgba(var(--shadow),.35)}
 
 /* ---------- masthead ---------- */
 .masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:14px}
@@ -134,315 +121,119 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 .clockbox{text-align:right;flex:none}
 .livetime{margin:0;font-size:var(--fs-title1);font-weight:500;line-height:1;color:var(--ink)}
 .today{margin:6px 0 0;font-size:var(--fs-foot);color:var(--faint)}
-.lede{margin:0;color:var(--muted);font-size:var(--fs-sub)}
+.lede{margin:0 0 18px;color:var(--muted);font-size:var(--fs-sub)}
 .lede .mono{color:var(--ink);font-weight:600}
 
-/* ---------- now card ---------- */
-.now{margin:18px 0 12px;padding:16px 20px;display:flex;flex-direction:column;gap:10px;border-color:var(--pink-mark)}
-.now-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.pcount{margin:0;font-size:var(--fs-sub);font-weight:600;color:var(--pink);white-space:nowrap}
-.now-main{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.pname{margin:0;font-weight:600;font-size:var(--fs-large);line-height:1.15}
-.prange{margin:0;font-size:var(--fs-sub);color:var(--muted)}
-.meter{height:4px;background:var(--sunk);overflow:hidden;border-radius:var(--r-xs)}
-.meter span{display:block;height:100%;width:0;border-radius:var(--r-xs);background:var(--pink-mark);transition:width .9s linear}
-.now[data-state="off"] .meter{visibility:hidden}
+/* ---------- subject hues ---------- */
+.subj-math {--c-soft:var(--sky-soft);   --c-mark:var(--sky-mark);   --c-text:var(--sky)}
+.subj-fuji {--c-soft:var(--fuji-soft);  --c-mark:var(--fuji-mark);  --c-text:var(--fuji)}
+.subj-honey{--c-soft:var(--honey-soft); --c-mark:var(--honey-mark); --c-text:var(--honey)}
+.subj-grass{--c-soft:var(--grass-soft); --c-mark:var(--grass-mark); --c-text:var(--grass)}
+.subj-mint {--c-soft:var(--mint-soft);  --c-mark:var(--mint-mark);  --c-text:var(--mint)}
+.subj-coral{--c-soft:var(--coral-soft); --c-mark:var(--coral-mark); --c-text:var(--coral)}
 
-.overview{position:relative;display:flex;gap:4px;margin-top:2px}
-.ov-col{display:flex;flex-direction:column;min-width:0}
-.ov-bar{display:flex;gap:2px;height:10px}
-.ov-seg{flex:1 1 0;min-width:0;border-radius:var(--r-xs);background:var(--line);transition:background var(--t-med)}
-.ov-seg.lesson{background:var(--sky-mark)}
-.ov-seg.lunch{background:var(--grass-mark)}
-.ov-seg.past{background:var(--hair)}
-.ov-seg.lunch.past{background:var(--hair)}
-.ov-seg.current{background:var(--pink-mark)}
-.ov-num{height:16px;line-height:16px;text-align:center;font-weight:600;font-size:var(--fs-caption);color:var(--faint)}
-.ov-col.group .ov-num{color:var(--sky)}
-.ov-col.group.current .ov-num{color:var(--pink)}
-.ov-now{position:absolute;top:-4px;width:2px;height:18px;border-radius:var(--r-xs);background:var(--pink);transform:translateX(-50%);pointer-events:none}
-.ov-now::after{content:"";position:absolute;left:50%;top:-5px;width:8px;height:8px;border-radius:50%;background:var(--pink-mark);transform:translateX(-50%);animation:breathe 2.6s ease-in-out infinite}
-@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(204,106,142,.35)}50%{box-shadow:0 0 0 6px rgba(204,106,142,0)}}
-.ov-now[hidden]{display:none}
-.next{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
-.nname{margin:0;font-weight:600;font-size:var(--fs-head)}
+/* ---------- the week grid ---------- */
+.board{padding:16px 18px 14px}
+.week{width:100%;border-collapse:separate;border-spacing:5px 6px;table-layout:fixed}
+.week th,.week td{padding:0;font-weight:400}
+.week caption{caption-side:top}
+.corner{width:112px}
+.dayhead{
+  text-align:center;vertical-align:middle;padding:7px 2px;border-radius:var(--r-md);
+  border:1px solid transparent;font-size:var(--fs-sub);font-weight:600;color:var(--muted);
+  transition:background var(--t-med) var(--ease),color var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
+}
+.dayhead .dshort{display:none}
+.dayhead .dnow{display:none}
+.dayhead.today{background:var(--pink-soft);border-color:var(--pink-mark);color:var(--pink)}
+.dayhead.today .dnow{
+  display:inline-flex;align-items:center;gap:4px;margin-left:5px;
+  font-size:var(--fs-caption);font-weight:600;color:var(--pink);vertical-align:1px;
+}
+.dayhead.today .dnow::before{
+  content:"";width:6px;height:6px;border-radius:50%;background:var(--pink-mark);flex:none;
+  animation:breathe 2.6s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(195,98,134,.35)}50%{box-shadow:0 0 0 5px rgba(195,98,134,0)}}
 
-/* ---------- settings ---------- */
-.settings{padding:2px 20px 14px;display:flex;flex-direction:column}
-.set-row{display:grid;grid-template-columns:120px 1fr;gap:16px;padding:14px 0 12px;border-bottom:1px solid var(--line);align-items:start}
-.set-label{display:flex;flex-direction:column;gap:2px;min-width:0}
-.set-val{margin:0;font-size:var(--fs-title);font-weight:600;line-height:1.2;white-space:nowrap;color:var(--muted);transition:color var(--t-fast)}
-.set-val.display{font-size:var(--fs-head)}
-.settings:not([data-off="0"]) .set-val.off{color:var(--pink)}
-.settings:not([data-pos="3"]) .set-val.pos{color:var(--grass)}
-.minireset{
-  align-self:flex-start;margin-top:2px;padding:2px 10px;min-height:24px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;
-  font-size:var(--fs-foot);font-weight:500;color:var(--muted);line-height:1.4;
-  transition:color var(--t-fast),border-color var(--t-fast),background var(--t-fast),opacity var(--t-fast);
-}
-.minireset:focus-visible{outline:none;box-shadow:0 0 0 3px var(--pink-soft),0 0 0 4px var(--pink-mark)}
-.minireset[disabled]{opacity:0;pointer-events:none}
-.set-body{min-width:0}
-.set-read{margin:6px 0 0;font-size:var(--fs-sub);color:var(--muted);line-height:1.7}
-.set-read b{font-weight:600;color:var(--ink)}
-.set-read .was{color:var(--faint)}
-.set-read .arr{color:var(--faint);margin:0 4px}
-.set-read .sep{display:inline-block;width:1px;height:.9em;background:var(--line);margin:0 8px;vertical-align:-1px}
-.set-read .it{white-space:nowrap}
-.set-foot{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-top:12px}
-.foot{position:relative;flex:1 1 auto;min-width:0}
-.hint{margin:0;font-size:var(--fs-foot);color:var(--faint);transition:opacity var(--t-med)}
-.flash{position:absolute;inset:0;margin:0;font-size:var(--fs-sub);font-weight:600;color:var(--pink);opacity:0;pointer-events:none;transition:opacity var(--t-med)}
-.foot.hot .hint{opacity:0}
-.foot.hot .flash{opacity:1}
-.btn{
-  flex:none;min-height:34px;padding:6px 16px;border:1px solid var(--pink-mark);border-radius:999px;cursor:pointer;
-  color:var(--ink);font-size:var(--fs-sub);font-weight:600;background:var(--pink-soft);
-  transition:background var(--t-fast),transform var(--t-fast) var(--ease),box-shadow var(--t-fast);
-}
-.btn:active{transform:translateY(1px)}
-.btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--pink-mark)}
+.rowhead{text-align:left;vertical-align:middle;padding:0 8px 0 4px;width:112px}
+.rowhead .pname{display:block;font-size:var(--fs-body);font-weight:600;line-height:1.3}
+.rowhead .ptime{display:block;font-size:var(--fs-caption);color:var(--faint);line-height:1.4;white-space:nowrap}
+.rowhead .plen{display:block;font-size:var(--fs-caption);color:var(--faint);line-height:1.4}
 
-/* slider */
-.slider-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
-.nudge{
-  width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
-  display:grid;place-items:center;cursor:pointer;color:var(--muted);font-size:var(--fs-head);font-weight:500;line-height:1;
-  transition:color var(--t-fast),border-color var(--t-fast),background var(--t-fast),opacity var(--t-fast);
+.tile{
+  display:flex;align-items:center;justify-content:center;min-height:68px;padding:6px 4px;
+  background:var(--c-soft);border:1px solid var(--c-mark);border-radius:var(--r-md);
+  color:var(--c-text);font-size:var(--fs-head);font-weight:600;letter-spacing:.04em;
+  transition:border-color var(--t-med) var(--ease),box-shadow var(--t-med) var(--ease);
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
-.nudge:focus-visible{outline:none;box-shadow:0 0 0 3px var(--pink-soft),0 0 0 4px var(--pink-mark)}
-.nudge[disabled]{opacity:.3;cursor:default;pointer-events:none}
-.track{position:relative;padding:10px 0 36px;--zero:0.5}
-.rail{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(10px + 14px);height:3px;border-radius:var(--r-xs);background:var(--hair);opacity:.5}
-.fill{position:absolute;top:calc(10px + 13px);height:5px;border-radius:var(--r-xs);background:var(--pink-mark);left:50%;width:0}
-.zero{position:absolute;left:calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--zero));top:calc(10px + 8px);width:2px;height:15px;border-radius:var(--r-xs);background:var(--muted);transform:translateX(-50%)}
-.ticks{position:absolute;left:calc(var(--thumb)/2);right:calc(var(--thumb)/2);top:calc(10px + 23px);height:16px}
-.ticks i{position:absolute;top:0;left:var(--x);transform:translateX(-50%);width:1px;height:4px;background:var(--hair);display:block}
-.ticks i.major{height:7px;background:var(--muted)}
-.ticks i.major::before,.ticks i.major::after{position:absolute;left:50%;transform:translateX(-50%);font-size:var(--fs-caption);white-space:nowrap}
-.ticks i.major::before{content:attr(data-l);top:9px;color:var(--muted);font-weight:600}
-.ticks i.major::after{content:attr(data-t);top:22px;color:var(--faint)}
-.ticks i.zero-tick::before{color:var(--ink)}
-.range{-webkit-appearance:none;appearance:none;position:relative;z-index:2;width:100%;height:30px;margin:0;background:transparent;cursor:pointer;display:block}
-.range:focus{outline:none}
-.range::-webkit-slider-runnable-track{height:30px;background:transparent}
-.range::-webkit-slider-thumb{
-  -webkit-appearance:none;width:var(--thumb);height:var(--thumb);border-radius:50%;
-  background:var(--surface);border:2px solid var(--pink-mark);box-shadow:0 2px 8px rgba(var(--shadow),.25);
-  margin-top:5px;transition:transform var(--t-fast) var(--ease),box-shadow var(--t-fast);
-}
-.range:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px var(--pink-soft),0 2px 8px rgba(var(--shadow),.25)}
-.range::-moz-range-track{height:30px;background:transparent}
-.range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--pink-mark);box-shadow:0 2px 8px rgba(var(--shadow),.25)}
-.range:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px var(--pink-soft)}
+.period-night .tile{min-height:56px}
+.cell.today .tile{border-color:var(--pink-mark);box-shadow:inset 0 0 0 1px var(--pink-mark)}
 
-/* break-position strip */
-.strip{display:flex;align-items:stretch;height:46px;gap:3px}
-.blk{
-  flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:var(--sky-soft);color:var(--sky);border:1px solid var(--sky-mark);border-radius:var(--r-md);
-}
-.blk b{font-weight:600;font-size:var(--fs-body);line-height:1.1}
-.blk small{font-size:var(--fs-caption);letter-spacing:0;white-space:nowrap;color:var(--sky)}
-.gap{
-  flex:0 0 22px;position:relative;margin:0;padding:0;background:var(--surface);border:1px dashed var(--hair);border-radius:var(--r-md);cursor:pointer;
-  transition:flex-basis var(--t-med) var(--ease),background var(--t-fast),border-color var(--t-fast);
-}
-.gap::before{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:var(--hair);transform:translate(-50%,-50%);transition:opacity var(--t-fast)}
-.gap:focus-visible{outline:none;box-shadow:0 0 0 3px var(--grass-soft),0 0 0 4px var(--grass-mark);z-index:1}
-.gap span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:var(--fs-sub);color:var(--grass);opacity:0;transition:opacity var(--t-fast);white-space:nowrap}
-.gap.on{flex-basis:64px;background:var(--grass-soft);border:1px solid var(--grass-mark);cursor:default}
-.gap.none{flex-basis:34px;margin-left:5px;border-style:solid;border-color:var(--line);background:var(--sunk)}
-.gap.none::before{display:none}
-.gap.none span{opacity:1;color:var(--faint);font-weight:500}
-.gap.none.on{flex-basis:40px;background:var(--surface);border-color:var(--muted)}
-.gap.none.on span{color:var(--ink);font-weight:600}
-.gap.none:focus-visible{box-shadow:0 0 0 3px var(--sunk),0 0 0 4px var(--muted)}
-.gap.on::before{opacity:0}
-.gap.on span{opacity:1}
-
-.chip{display:inline-block;vertical-align:middle;margin-left:8px;padding:1px 8px;font-size:var(--fs-caption);font-weight:600;background:var(--pink-soft);color:var(--pink);border-radius:var(--r-sm)}
-.chip.lav{background:var(--grass-soft);color:var(--grass)}
-.chip[hidden]{display:none}
-
-@media (hover:hover){
-.minireset:hover{color:var(--pink);border-color:var(--pink-mark);background:var(--pink-soft)}
-.btn:hover{background:color-mix(in srgb, var(--pink-soft) 80%, var(--surface));box-shadow:0 6px 16px -10px rgba(var(--shadow),.5)}
-.nudge:hover{color:var(--pink);border-color:var(--pink-mark);background:var(--pink-soft)}
-.range:hover::-webkit-slider-thumb,.range:active::-webkit-slider-thumb{transform:scale(1.1)}
-.gap:hover{background:var(--grass-soft);border-color:var(--grass-mark)}
-.gap:hover::before{background:var(--grass-mark)}
-.gap.none:hover{background:var(--sunk);border-color:var(--hair)}
-.gap.none:hover span{color:var(--muted)}
+.breakhead{width:112px;text-align:left;vertical-align:middle;padding:0 8px 0 4px}
+.breakhead span{font-size:var(--fs-foot);font-weight:500;color:var(--faint)}
+.breakband{
+  display:flex;align-items:center;justify-content:center;min-height:28px;
+  background:var(--sunk);border-radius:var(--r-sm);
+  font-size:var(--fs-foot);color:var(--faint);letter-spacing:.02em;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
 
-/* ---------- stats (left pane) ---------- */
-.tally{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 0;padding:12px}
-.tally div{background:var(--sunk);border-radius:var(--r-md);padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.tally dt{margin:0;font-size:var(--fs-foot);font-weight:600;color:var(--muted)}
-.tally dd{margin:0;font-size:var(--fs-head);font-weight:600;white-space:nowrap}
-.note{margin:12px 4px 0;font-size:var(--fs-foot);color:var(--faint)}
+/* ---------- legend & note ---------- */
+.legend{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;margin:14px 2px 0;font-size:var(--fs-foot);color:var(--muted)}
+.key{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--c-mark)}
+.kcount{font-weight:400;font-size:var(--fs-caption);color:var(--faint)}
+.note{margin:12px 2px 0;font-size:var(--fs-foot);color:var(--faint)}
 
-/* ---------- ribbon ---------- */
-.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:26px 0 12px;font-size:var(--fs-foot);color:var(--muted)}
-.key{display:inline-flex;align-items:center;gap:6px}
-.dot{width:10px;height:10px;border-radius:50%;flex:none}
-.dot.lesson{background:var(--sky-mark)}
-.dot.rest{background:var(--hair)}
-.dot.lunch{background:var(--grass-mark)}
-.key.spinekey i{display:inline-block;width:3px;height:12px;border-radius:var(--r-xs);background:var(--sky-mark)}
-.legend-chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.legend-chips .chip{margin-left:0}
-
-.ribbon{
-  position:relative;display:grid;grid-template-columns:var(--gutter) var(--spine) 1fr;height:calc(var(--total, 660) * var(--ppm));
-  --p-n0:0%;--p-dawn:0%;--p-morn:0%;--p-aft:100%;--p-dusk:100%;--p-n1:100%;
-}
-.ribbon::before{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--gutter) + var(--spine));pointer-events:none;
-  background:linear-gradient(to bottom, var(--day-night) var(--p-n0), var(--day-glow) var(--p-dawn), var(--day-noon) var(--p-morn), var(--day-noon) var(--p-aft), var(--day-glow) var(--p-dusk), var(--day-night) var(--p-n1));
-  -webkit-mask:linear-gradient(to right, transparent, #000 45%, #000 92%, transparent), linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
-  -webkit-mask-composite:source-in;mask:linear-gradient(to right, transparent, #000 45%, #000 92%, transparent), linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);mask-composite:intersect;
-}
-.segs{list-style:none;margin:0;padding:0;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line);box-shadow:0 6px 24px -18px rgba(var(--shadow),.35)}
-.axis{position:relative;z-index:1;border-right:1px solid var(--line)}
-.tick{position:absolute;right:0;top:calc(var(--at) * var(--ppm));transform:translateY(-50%);padding-right:12px;font-size:var(--fs-foot);color:var(--faint);transition:opacity var(--t-fast)}
-.tick.dodge{opacity:0}
-.tick::after{content:"";position:absolute;right:-1px;top:50%;width:5px;height:1px;background:var(--hair)}
-
-.spines{position:relative;z-index:1}
-.spine{position:absolute;left:0;right:0;top:calc(var(--at) * var(--ppm));height:calc(var(--min) * var(--ppm));display:flex;align-items:center;justify-content:center}
-.spine::before{content:"";position:absolute;left:50%;transform:translateX(-50%);top:5px;bottom:5px;width:3px;border-radius:var(--r-xs);background:var(--sky-mark);transition:background var(--t-med)}
-.spine::after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:0;width:9px;height:9px;border-radius:50%;background:var(--sky-mark);box-shadow:0 0 0 2px var(--bg);transition:background var(--t-med)}
-.spine b{position:relative;z-index:1;font-weight:600;font-size:var(--fs-foot);color:var(--sky);background:var(--bg);padding:3px 1px;line-height:1;border-radius:var(--r-sm);transition:color var(--t-med)}
-.spine.past::before,.spine.past::after{background:var(--hair)}
-.spine.past b{color:var(--faint)}
-.spine.current::before,.spine.current::after{background:var(--pink-mark)}
-.spine.current b{color:var(--pink)}
-
-.seg{
-  height:calc(var(--min) * var(--ppm));
-  display:grid;grid-template-columns:2.6rem 1fr auto;align-items:center;gap:10px;
-  padding:0 16px 0 14px;border-bottom:1px solid var(--line);background:var(--surface);
-  transition:background var(--t-med) ease;
-}
-.seg .idx{font-size:var(--fs-sub);font-weight:600;color:var(--sky)}
-.seg .name{font-size:var(--fs-body);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.seg .time{font-size:var(--fs-sub);color:var(--muted)}
-.seg.rest{background:var(--sunk)}
-.seg.rest .name{font-size:var(--fs-foot);font-weight:500;color:var(--faint)}
-.seg.rest .time{font-size:var(--fs-foot);color:var(--faint)}
-.seg.rest .idx{font-size:var(--fs-foot);color:var(--faint)}
-.seg.rest.inner{background:var(--surface)}
-.seg.rest.inner .name::after{content:" · 大节内"}
-.seg.lunch{background:var(--grass-soft)}
-.seg.lunch .name{font-weight:600;font-size:var(--fs-head);letter-spacing:.06em;color:var(--grass)}
-.seg.lunch .idx,.seg.lunch .time{color:var(--grass)}
-.seg.past{background:var(--sunk)}
-.seg.past .name{font-weight:500;color:var(--muted)}
-.seg.past .idx,.seg.past .time{color:var(--faint)}
-.seg.rest.past{background:var(--sunk)}
-/* the current row fills from the top as time passes; the fill's edge is "now", so nothing crosses the text */
-.seg.current{background:linear-gradient(to bottom, var(--pink-fill) 0 var(--prog, 0%), var(--pink-soft) var(--prog, 0%) 100%)}
-.seg:first-child{border-radius:var(--r-lg) var(--r-lg) 0 0}
-.seg:last-child{border-radius:0 0 var(--r-lg) var(--r-lg);border-bottom:0}
-.seg.current .name{color:var(--pink-deep)}
-.seg.current .idx,.seg.current .time{color:var(--pink-deep)}
-
-.nowline{position:absolute;left:0;width:calc(var(--gutter) + var(--spine));top:calc(var(--at) * var(--ppm));height:0;border-top:2px solid var(--pink-mark);z-index:4;pointer-events:none}
-.nowline::after{content:"";position:absolute;right:-1px;top:-5px;border:4px solid transparent;border-left:5px solid var(--pink-mark);border-right:0}
-.nowline[hidden]{display:none}
-.nowpill{position:absolute;left:0;top:50%;transform:translateY(-50%);background:var(--pink);color:var(--surface);border-radius:999px;font-size:var(--fs-caption);font-weight:600;padding:2px 8px}
-
-@media (min-width:1040px){
-  .wrap{max-width:1200px;padding:28px 32px 56px}
-  .layout{display:grid;grid-template-columns:400px minmax(0,1fr);gap:40px;align-items:start}
-  .pane.side{position:sticky;top:0;max-height:100vh;overflow-y:auto;overscroll-behavior:contain;padding:4px 10px 8px 0;margin-top:-4px;margin-right:-10px;scrollbar-width:thin;scrollbar-color:var(--hair) transparent;scrollbar-gutter:stable}
-  .pane.side::-webkit-scrollbar{width:6px}
-  .pane.side::-webkit-scrollbar-thumb{background:var(--hair);border-radius:var(--r-xs)}
-  .pane.side::-webkit-scrollbar-track{background:transparent}
-  .pane.side::after{content:"";position:sticky;bottom:-8px;display:block;height:36px;margin-top:-36px;pointer-events:none;background:linear-gradient(to bottom, transparent, var(--bg));opacity:0;transition:opacity var(--t-fast)}
-  .pane.side.more::after{opacity:1}
-  .masthead{padding-bottom:10px}
-  h1{font-size:var(--fs-title1)}
+/* ---------- responsive ---------- */
+@media (max-width:700px){
+  .wrap{padding:26px 14px 52px}
+  .board{padding:12px 12px 10px}
+  .week{border-spacing:4px 5px}
+  .corner,.rowhead,.breakhead{width:78px}
+  .rowhead{padding:0 6px 0 2px}
+  .rowhead .pname{font-size:var(--fs-sub)}
+  .rowhead .plen{display:none}
+  .tile{min-height:58px;font-size:var(--fs-sub)}
+  .period-night .tile{min-height:48px}
   .livetime{font-size:var(--fs-title)}
-  .lede{display:none}
-  .now{margin:12px 0 10px;padding:14px 18px;gap:8px}
-  .pname{font-size:var(--fs-title1)}
-  .settings{padding:0 18px 12px}
-  .set-row{grid-template-columns:1fr;gap:8px;padding:12px 0 10px}
-  .set-label{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px}
-  .set-val{font-size:var(--fs-head);text-align:right}
-  .set-val.display{font-size:var(--fs-body)}
-  .minireset{margin-top:0}
-  .set-foot{flex-direction:column-reverse;align-items:stretch;gap:10px;padding-top:10px}
-  .btn{align-self:flex-start}
-  .hint .kbd{display:none}
-  .legend{margin-top:6px}
-  .stickybar{display:none}
-  .gap{flex-basis:16px}
-  .gap.on{flex-basis:46px}
-  .gap span{font-size:var(--fs-foot)}
-  .tally{grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;padding:8px}
-  .tally div{padding:8px 8px}
-  .tally dt{font-size:var(--fs-caption)}
-  .tally dd{font-size:var(--fs-sub)}
-  .note{display:none}
+  .lede{font-size:var(--fs-foot)}
 }
-@media (max-width:560px){
-  :root{--ppm:1.7px;--gutter:46px;--spine:26px}
-  .wrap{padding:26px 14px 56px}
-  .sb-in{padding:calc(8px + env(safe-area-inset-top)) 14px 7px;gap:8px}
-  .sb-range{display:none}
-  .livetime{font-size:var(--fs-title)}
-  .now{padding:14px 14px 14px}
-  .pname{font-size:var(--fs-title1)}
-  .settings{padding:0 14px 12px}
-  .set-row{grid-template-columns:1fr;gap:10px}
-  .set-label{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:10px}
-  .set-val{font-size:var(--fs-head);text-align:right}
-  .set-val.display{font-size:var(--fs-body)}
-  .minireset{margin-top:0}
-  .set-foot{flex-direction:column-reverse;align-items:stretch}
-  .btn{align-self:flex-start}
-  .kbd{display:none}
-  .blk b{font-size:var(--fs-sub)}
-  .blk small{display:none}
-  .gap{flex-basis:22px}
-  .gap.on{flex-basis:50px}
-  .gap span{font-size:var(--fs-foot)}
-  .seg{grid-template-columns:2.2rem 1fr auto;padding:0 10px 0 8px;gap:8px}
-  .seg .name{font-size:var(--fs-sub)}
-  .seg.rest.inner .name::after{content:""}
-  .spine b{font-size:var(--fs-caption)}
-  .tally{grid-template-columns:repeat(2,1fr)}
+@media (max-width:480px){
+  .wrap{padding:22px 10px 44px}
+  .board{padding:9px 8px 8px}
+  .week{border-spacing:3px 4px}
+  .corner,.rowhead,.breakhead{width:42px}
+  .rowhead,.breakhead{padding:0 3px 0 1px}
+  .rowhead .pname{font-size:var(--fs-foot)}
+  .rowhead .ptime{display:none}
+  .breakhead span{font-size:var(--fs-caption)}
+  .dayhead{padding:5px 0;font-size:var(--fs-foot)}
+  .dayhead .dfull{display:none}
+  .dayhead .dshort{display:inline}
+  .dayhead.today .dnow{display:none}
+  .tile{min-height:46px;padding:4px 1px;font-size:var(--fs-foot);letter-spacing:0;border-radius:var(--r-sm)}
+  .period-night .tile{min-height:40px}
+  .breakband{min-height:22px;font-size:var(--fs-caption)}
+  .masthead{gap:10px}
+  .legend{gap:6px 12px}
 }
-@media (max-width:420px){
-  :root{--gutter:42px}
-  .seg .dur{display:none}
-  .ticks i.major:not(.zero-tick):not(.end)::after{content:none}
-  .gap{flex-basis:16px}
-  .gap.on{flex-basis:40px}
-  .gap.none{flex-basis:30px;margin-left:4px}
-  .gap.none.on{flex-basis:34px}
-  .gap span{font-size:var(--fs-caption)}
-  .blk b{font-size:var(--fs-foot)}
-  .nudge{width:36px;height:36px}
-}
-@media (pointer:coarse) and (min-width:421px){
-  .nudge{width:44px;height:44px}
-  .btn{min-height:40px}
-  .minireset{min-height:32px;padding:6px 12px}
-  .range{height:36px}
-  .range::-webkit-slider-thumb{margin-top:8px}
+@media (max-width:340px){
+  .wrap{padding:20px 8px 40px}
+  .board{padding:7px 6px 6px}
+  .week{border-spacing:2px 3px}
+  .corner,.rowhead,.breakhead{width:36px}
+  .tile{font-size:var(--fs-caption);min-height:42px}
+  .period-night .tile{min-height:36px}
 }
 @media print{
-  body{background:#fff;color:#000}
-  .stickybar,.settings,.nowline,.ov-now,.note{display:none !important}
-  .layout{display:block}
-  .pane.side{position:static;max-height:none;overflow:visible}
-  .panel,.tally,.segs{box-shadow:none}
-  .seg{break-inside:avoid}
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .panel{box-shadow:none}
+  .clockbox{display:none}
+  .dayhead.today .dnow::before{animation:none}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none !important;animation:none !important}
@@ -450,534 +241,111 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 </style>
 </head>
 <body>
-<div class="stickybar" id="stickybar" aria-hidden="true">
-  <button type="button" class="sb-in" id="sbBtn" tabindex="-1">
-    <span class="plabel">现在</span>
-    <span class="sb-name" id="sbName">—</span>
-    <span class="sb-range mono" id="sbRange"></span>
-    <span class="sb-count mono" id="sbCount"></span>
-  </button>
-  <span class="sb-meter"><span id="sbFill"></span></span>
-</div>
-
-<p class="sr-only" id="liveMsg" aria-live="polite"></p>
 <div class="wrap">
-<div class="layout">
-<div class="pane side" id="side">
   <header class="masthead">
     <div>
-      <p class="eyebrow"><span class="spark" aria-hidden="true">✧</span>今日课表 · 6 大节</p>
-      <h1>一日十二节</h1>
+      <p class="eyebrow"><span class="spark" aria-hidden="true">✧</span>固定周表 · 每周循环</p>
+      <h1>一周二十一节</h1>
     </div>
     <div class="clockbox">
       <p class="livetime mono" id="clock">--:--:--</p>
-      <p class="today mono" id="today"></p>
+      <p class="today mono" id="dateline"></p>
     </div>
   </header>
-  <p class="lede"><span class="mono" id="ledeStart">07:00</span> 起，六大节、每大节两小节各 40 min，节间休息 10 min，<span id="ledeLunch">其中一段休息 80 min</span>，<span class="mono" id="ledeEnd">18:00</span> 收尾。</p>
+  <p class="lede">上午 <span class="mono">07:00–12:00</span> · 下午 <span class="mono">13:00–18:00</span> · 晚上 <span class="mono">19:00–21:00</span>，每天三节；整周固定，<span class="mono">今天</span>高亮。</p>
 
-  <section class="now panel" id="status">
-    <div class="now-head">
-      <p class="plabel">现在<span class="chip mono" id="nowChip" hidden></span></p>
-      <p class="pcount mono" id="nowCount"></p>
-    </div>
-    <div class="now-main">
-      <p class="pname" id="nowName">—</p>
-      <p class="prange mono" id="nowRange"></p>
-    </div>
-    <div class="meter"><span id="meterFill"></span></div>
-    <div class="overview" id="overview" aria-hidden="true"></div>
-    <div class="next">
-      <span class="plabel">接下来</span>
-      <p class="nname" id="nextName">—</p>
-      <p class="prange mono" id="nextRange"></p>
-    </div>
+  <section class="board panel" aria-label="每周课程表">
+    <table class="week" id="week">
+      <caption class="sr-only">每周固定课程表：周一至周日，每天上午、下午、晚上各一节，共二十一节。</caption>
+    </table>
+    <div class="legend" id="legend"></div>
+    <p class="note">上午 / 下午为大节（5 h），晚上为小节（2 h）· 各科间隔按节数均匀，此表为穷举验证的全局最优。</p>
   </section>
-
-  <section class="settings panel" id="settings" data-off="0" data-pos="3">
-    <div class="set-row">
-      <div class="set-label">
-        <p class="plabel">整体偏移</p>
-        <p class="set-val off mono" id="offBig">0:00</p>
-        <button class="minireset" id="offReset" type="button" disabled>复位到 0</button>
-      </div>
-      <div class="set-body">
-        <div class="slider-row">
-          <button class="nudge" id="minus" type="button" aria-label="提前 10 min">−</button>
-          <div class="track">
-            <div class="rail"></div>
-            <div class="fill" id="fill"></div>
-            <div class="zero"></div>
-                        <div class="ticks" id="ticks" aria-hidden="true"></div>
-            <input class="range" id="range" type="range" min="-420" max="360" step="10" value="0"
-                   aria-label="整体偏移，最早提前 7 h 到 00:00 开始，最晚推到当天 24:00 结束，步长 10 min" aria-valuetext="与原表一致">
-          </div>
-          <button class="nudge" id="plus" type="button" aria-label="推后 10 min">+</button>
-        </div>
-        <p class="set-read" id="offRead"></p>
-      </div>
-    </div>
-
-    <div class="set-row">
-      <div class="set-label">
-        <p class="plabel">80 min 休息</p>
-        <p class="set-val pos display" id="lunchBig">第 6 节后</p>
-        <button class="minireset" id="lunchReset" type="button" disabled>复位到第 6 节后</button>
-      </div>
-      <div class="set-body">
-        <div class="strip" id="strip" role="radiogroup" aria-label="80 min 休息放在哪一大节之后，或不放"></div>
-        <p class="set-read" id="lunchRead"></p>
-      </div>
-    </div>
-
-    <div class="set-foot">
-      <div class="foot" id="foot">
-        <p class="hint">整张表始终落在 00:00 – 24:00 内 · 选「无」则不放长休息、全天缩短 80 min · 大节（两小节连上）不拆开<span class="kbd"> · 滑块 ← → 每次 10 min，双击复位 · 空位 ← → 移一大节</span> · 设置会记住</p>
-        <p class="flash" id="flash" aria-live="polite"></p>
-      </div>
-      <button class="btn" id="startNow" type="button" title="把开始时间对齐到现在（取整到 10 min）">从现在开始</button>
-    </div>
-  </section>
-  <dl class="tally panel">
-    <div><dt>全天</dt><dd class="mono" id="tallyAll">11 h</dd></div>
-    <div><dt>在课</dt><dd class="mono">8 h</dd></div>
-    <div><dt>休息</dt><dd class="mono" id="tallyRest">180 min</dd></div>
-    <div><dt>休息次数</dt><dd class="mono" id="tallyCount">11 次</dd></div>
-  </dl>
-  <p class="note">时刻线随本机时间移动 · 当前一段随进度填色 · 每段时长不随偏移或休息位置改变</p>
-</div>
-
-<div class="pane main">
-  <div class="legend">
-    <span class="key"><span class="dot lesson"></span>上课 40 min</span>
-    <span class="key"><span class="dot rest"></span>休息 10 min</span>
-    <span class="key"><span class="dot lunch"></span>休息 80 min</span>
-    <span class="key spinekey"><i></i>一大节 = 两小节</span>
-    <span class="legend-chips">
-      <span class="chip mono" id="axisChip" hidden></span>
-      <span class="chip lav" id="lunchChip" hidden></span>
-    </span>
-  </div>
-
-  <div class="ribbon" id="ribbon">
-    <div class="axis" id="axis"></div>
-    <div class="spines" id="spines"></div>
-    <ol class="segs" id="segs"></ol>
-    <div class="nowline" id="nowline" hidden><span class="nowpill mono" id="nowpill">--:--</span></div>
-  </div>
-
-</div>
-</div>
 </div>
 
 <script>
-const BASE_START = 420;                    // 07:00 before any offset; the end depends on where the 80-min break sits
-const STEP = 10, MIN_OFF = -420;   // −7 h puts the table at 00:00; the ceiling is whatever keeps the end ≤ 24:00
-const pad = n => String(n).padStart(2,"0");
+/* ---------- the fixed table (穷举最优解，见 repo 历史 / timetable 报告) ---------- */
+const DAYS = ["周一","周二","周三","周四","周五","周六","周日"];
+const SUBJECTS = [
+  {name:"数学", cls:"subj-math",  count:3, hours:15},
+  {name:"语文", cls:"subj-fuji",  count:3, hours:15},
+  {name:"历史", cls:"subj-honey", count:3, hours:15},
+  {name:"政治", cls:"subj-grass", count:3, hours:15},
+  {name:"地理", cls:"subj-mint",  count:4, hours:14, tip:"2 大节 + 2 小节"},
+  {name:"日语", cls:"subj-coral", count:5, hours:10, tip:"5 小节"},
+];
+const PERIODS = [
+  {name:"上午", time:"07:00–12:00", len:"5 h", night:false,
+   cells:["数学","语文","数学","语文","历史","政治","历史"]},
+  {name:"下午", time:"13:00–18:00", len:"5 h", night:false,
+   cells:["政治","历史","政治","地理","数学","语文","地理"]},
+  {name:"晚上", time:"19:00–21:00", len:"2 h", night:true,
+   cells:["日语","地理","日语","日语","地理","日语","日语"]},
+];
+const BREAKS = [   // 放在第 n 个时段之后
+  {after:0, name:"午休", text:"12:00–13:00 · 1 h"},
+  {after:1, name:"晚休", text:"18:00–19:00 · 1 h"},
+];
+const SUBJ = Object.fromEntries(SUBJECTS.map(s => [s.name, s]));
 
-/* The day is 6 大节 (two 40-min 小节 joined by a 10-min break). Between 大节 there is a 10-min break,
-   except one slot that may hold the 80-min break. lunchAfter says which 大节 it follows (1–5), or 0 for
-   "no long break": putting it before 第 1 节 or after 第 12 节 is the same table as leaving it out, just
-   with 80 free minutes outside it — so those two cases are one state, and the day is 590 min. */
-const BLOCKS = 6, LUNCH_DEFAULT = 3;
-let lunchAfter = LUNCH_DEFAULT;
-function buildDay(pos){
-  const list = []; let t = BASE_START;
-  const push = (k, n, len, blk) => { list.push({ k, n, from: t, to: t + len, len, blk }); t += len; };
-  for (let b = 1; b <= BLOCKS; b++){
-    push("lesson", 2*b - 1, 40, b);
-    push("rest", null, 10, b);            // inside the 大节
-    push("lesson", 2*b, 40, b);
-    if (b < BLOCKS) push(b === pos ? "lunch" : "rest", null, b === pos ? 80 : 10, 0);
-  }
-  return list;
-}
-let DAY = buildDay(lunchAfter);
-
-let off = 0;   // minutes, applied to every time on the page
-
-const dayEnd = () => DAY[DAY.length - 1].to;
-const maxOff = () => 1440 - dayEnd();
-const clampOff = v => Math.max(MIN_OFF, Math.min(maxOff(), Math.round(v / STEP) * STEP));
-const zeroPos = () => (0 - MIN_OFF) / (maxOff() - MIN_OFF);
-const spanPos = m => (m - MIN_OFF) / (maxOff() - MIN_OFF);
-const start = () => BASE_START + off;
-const end   = () => dayEnd() + off;
-const firstLesson = () => DAY.find(d => d.k === "lesson");
-const lastLesson  = () => [...DAY].reverse().find(d => d.k === "lesson");
-const lunchSeg = () => DAY.find(d => d.k === "lunch");
-
-const clock = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
-const nameOf = d => d.k === "lesson" ? "第 " + d.n + " 节" : "休息";
-const rangeText = d => clock(d.from + off) + " – " + clock(d.to + off) + " · " + d.len + " min";
-const untilLabel = d => d.k === "lesson" ? "距下课" : "距上课";
-const CN = ["一","二","三","四","五","六"];
-
-function offLabel(){
-  const a = Math.abs(off), h = Math.floor(a / 60), m = a % 60;
-  return (off < 0 ? "−" : off > 0 ? "+" : "") + h + ":" + pad(m);
-}
-function offWords(){
-  if (off === 0) return "与原表一致";
-  const a = Math.abs(off), h = Math.floor(a / 60), m = a % 60;
-  return ("整体" + (off < 0 ? "提前" : "推后") + " " + (h ? h + " h " : "") + (m ? m + " min" : "")).trim();
-}
-const whereText = () => lunchAfter === 0 ? "无" : "第 " + (2 * lunchAfter) + " 节后";
-const SLOTS = [1, 2, 3, 4, 5, 0];   // keyboard order across the strip: five gaps, then "无"
-
-/* ---------- element map ---------- */
-const $ = id => document.getElementById(id);
-const el = {
-  clock: $("clock"), today: $("today"), ledeStart: $("ledeStart"), ledeEnd: $("ledeEnd"), ledeLunch: $("ledeLunch"),
-  status: $("status"), nowChip: $("nowChip"), nowCount: $("nowCount"), nowName: $("nowName"), nowRange: $("nowRange"),
-  meter: $("meterFill"), overview: $("overview"), nextName: $("nextName"), nextRange: $("nextRange"),
-  settings: $("settings"), range: $("range"), fill: $("fill"), ticks: $("ticks"), minus: $("minus"), plus: $("plus"),
-  offBig: $("offBig"), offRead: $("offRead"), offReset: $("offReset"),
-  lunchBig: $("lunchBig"), lunchRead: $("lunchRead"), lunchReset: $("lunchReset"), strip: $("strip"),
-  startNow: $("startNow"), foot: $("foot"), flash: $("flash"),
-  axisChip: $("axisChip"), lunchChip: $("lunchChip"),
-  ribbon: $("ribbon"), axis: $("axis"), spines: $("spines"), segs: $("segs"), line: $("nowline"), pill: $("nowpill"),
-  tallyAll: $("tallyAll"), tallyRest: $("tallyRest"), tallyCount: $("tallyCount"),
-  bar: $("stickybar"), sbName: $("sbName"), sbRange: $("sbRange"), sbCount: $("sbCount"), sbFill: $("sbFill"),
-  live: $("liveMsg")
-};
-let lastAnnounced = "";
-
-/* ---------- ribbon + overview: rebuilt when the break moves ---------- */
-let nodes = [], timeCells = [], spineNodes = [], ovSegs = [], ovGroups = [], ovNow = null;
-function renderRibbon(){
-  el.segs.innerHTML = DAY.map((d, i) => {
-    const idx = d.k === "lesson" ? d.n : (d.k === "lunch" ? "—" : "·");
-    const inner = d.k === "rest" && d.blk ? " inner" : "";
-    return '<li class="seg ' + d.k + inner + '" data-i="' + i + '" style="--min:' + d.len + '">' +
-             '<span class="idx mono">' + idx + '</span>' +
-             '<span class="name">' + nameOf(d) + '</span>' +
-             '<span class="time mono"></span>' +
-           '</li>';
-  }).join("");
-  nodes = [...el.segs.children];
-  timeCells = nodes.map(n => n.querySelector(".time"));
-
-  // one spine per 大节, spanning 小节 + inner break + 小节
-  el.spines.innerHTML = Array.from({ length: BLOCKS }, (_, i) => {
-    const b = i + 1, a = DAY.find(d => d.k === "lesson" && d.n === 2*b - 1), z = DAY.find(d => d.k === "lesson" && d.n === 2*b);
-    return '<div class="spine" data-blk="' + b + '" style="--at:' + (a.from - BASE_START) + ';--min:' + (z.to - a.from) + '" title="第 ' + b + ' 大节 · 第 ' + (2*b-1) + '–' + (2*b) + ' 节"><b>' + CN[i] + '</b></div>';
-  }).join("");
-  spineNodes = [...el.spines.children];
-
-  // proportional overview bar in the now card, grouped the same way
-  let html = "", i = 0;
-  const seg = d => '<span class="ov-seg ' + d.k + '" data-i="' + DAY.indexOf(d) + '" style="flex-grow:' + d.len + '"></span>';
-  while (i < DAY.length){
-    const d = DAY[i];
-    if (d.k === "lesson"){
-      const trio = DAY.slice(i, i + 3);
-      html += '<div class="ov-col group" data-blk="' + d.blk + '" style="flex:' + trio.reduce((a, x) => a + x.len, 0) + ' 1 0"><div class="ov-bar">' + trio.map(seg).join("") + '</div><div class="ov-num">' + CN[d.blk - 1] + '</div></div>';
-      i += 3;
-    } else {
-      html += '<div class="ov-col" style="flex:' + d.len + ' 1 0"><div class="ov-bar">' + seg(d) + '</div><div class="ov-num"></div></div>';
-      i += 1;
-    }
-  }
-  el.overview.innerHTML = html + '<div class="ov-now" id="ovNow" hidden></div>';
-  ovSegs = DAY.map((_, k) => el.overview.querySelector('.ov-seg[data-i="' + k + '"]'));
-  ovGroups = [...el.overview.querySelectorAll(".ov-col.group")];
-  ovNow = $("ovNow");
-}
-
-function renderTimes(){
-  DAY.forEach((d, i) => {
-    timeCells[i].innerHTML = clock(d.from + off) + "–" + clock(d.to + off) + '<span class="dur"> · ' + d.len + " min</span>";
+/* ---------- render once ---------- */
+const week = document.getElementById("week");
+let html = '<thead><tr><th class="corner" scope="col"><span class="sr-only">时段</span></th>';
+DAYS.forEach((d, i) => {
+  html += '<th class="dayhead" scope="col" data-day="' + i + '">' +
+          '<span class="dfull">' + d + '</span><span class="dshort">' + d.slice(1) + '</span>' +
+          '<span class="dnow">今天</span></th>';
+});
+html += '</tr></thead><tbody>';
+PERIODS.forEach((p, pi) => {
+  html += '<tr class="period' + (p.night ? ' period-night' : '') + '">' +
+          '<th class="rowhead" scope="row"><span class="pname">' + p.name + '</span>' +
+          '<span class="ptime mono">' + p.time + '</span><span class="plen">' + p.len + '</span></th>';
+  p.cells.forEach((name, di) => {
+    html += '<td class="cell" data-day="' + di + '"><div class="tile ' + SUBJ[name].cls + '">' + name + '</div></td>';
   });
-  // daylight along the axis, mirrored about noon: night ≤04:00 · glow 06:30 · clear 09:00–15:00 · glow 17:30 · night ≥20:00
-  const span = end() - start();
-  const at = m => (Math.max(0, Math.min(1, (m - start()) / span)) * 100).toFixed(2) + "%";
-  el.ribbon.style.setProperty("--p-n0",   at(720 - 480));
-  el.ribbon.style.setProperty("--p-dawn", at(720 - 330));
-  el.ribbon.style.setProperty("--p-morn", at(720 - 180));
-  el.ribbon.style.setProperty("--p-aft",  at(720 + 180));
-  el.ribbon.style.setProperty("--p-dusk", at(720 + 330));
-  el.ribbon.style.setProperty("--p-n1",   at(720 + 480));
-  let html = "";
-  for (let h = Math.ceil(start() / 60); h * 60 <= end(); h++){
-    html += '<span class="tick mono" style="--at:' + (h*60 - start()) + '">' + clock(h*60) + '</span>';
+  html += '</tr>';
+  const br = BREAKS.find(b => b.after === pi);
+  if (br){
+    html += '<tr class="breakrow"><th class="breakhead" scope="row"><span>' + br.name + '</span></th>' +
+            '<td colspan="7"><div class="breakband mono">' + br.text + '</div></td></tr>';
   }
-  el.axis.innerHTML = html;
-}
-
-/* ---------- slider scale: −7 h … the ceiling for the current day length; a tick per hour,
-   labels at both ends, at 0 and every 3 h (a 3 h label within 90 min of an end is dropped) ---------- */
-const offText = m => m === 0 ? "0" : (m < 0 ? "−" : "+") + Math.floor(Math.abs(m) / 60) + (Math.abs(m) % 60 ? ":" + pad(Math.abs(m) % 60) : "h");
-function renderTicks(){
-  const max = maxOff();
-  document.querySelector(".track").style.setProperty("--zero", zeroPos());
-  el.range.max = max;
-  const marks = [];
-  for (let m = MIN_OFF; m <= max; m += 60) marks.push(m);
-  if (max % 60) marks.push(max);
-  el.ticks.innerHTML = marks.map(m => {
-    const end = m === MIN_OFF || m === max;
-    const major = end || (m % 180 === 0 && Math.min(m - MIN_OFF, max - m) >= 90);
-    const cls = (major ? "major" : "") + (m === 0 ? " zero-tick" : "") + (end ? " end" : "");
-    return '<i class="' + cls.trim() + '" style="--x:' + (spanPos(m) * 100).toFixed(3) + '%"' +
-           (major ? ' data-l="' + offText(m) + '" data-t="' + clock(BASE_START + m) + '"' : '') + '></i>';
-  }).join("");
-}
-
-/* ---------- offset ---------- */
-function setOffset(v, persist){
-  off = clampOff(v);
-  el.range.value = off;
-  el.settings.dataset.off = off;
-  el.range.setAttribute("aria-valuetext", offWords());
-
-  const usable = "(100% - var(--thumb))", half = "var(--thumb) / 2";
-  const pct = spanPos(off) * 100, zp = zeroPos() * 100;
-  const lo = Math.min(pct, zp), hi = Math.max(pct, zp);
-  el.fill.style.left  = "calc(" + half + " + " + usable + " * " + (lo / 100) + ")";
-  el.fill.style.width = "calc(" + usable + " * " + ((hi - lo) / 100) + ")";
-
-  el.offReset.disabled = off === 0;
-  el.minus.disabled = off <= MIN_OFF;
-  el.plus.disabled  = off >= maxOff();
-  el.offBig.textContent = offLabel();
-
-  const arrow = (was, now) => off === 0 ? "<b>" + now + "</b>" : '<span class="was">' + was + '</span><span class="arr">→</span><b>' + now + "</b>";
-  const bound = off === MIN_OFF ? "（已到一天最早）" : off === maxOff() ? "（已到一天最晚）" : "";
-  const fl = firstLesson(), ll = lastLesson();
-  const it = h => '<span class="it">' + h + "</span>";
-  let read = it(offWords() + bound) +
-    '<span class="sep" aria-hidden="true"></span>' + it("开始 " + arrow(clock(BASE_START), clock(start()))) +
-    '<span class="sep" aria-hidden="true"></span>' + it("结束 " + arrow(clock(dayEnd()), clock(end())));
-  if (DAY[0].k !== "lesson") read += '<span class="sep" aria-hidden="true"></span>' + it("第 1 节 <b>" + clock(fl.from + off) + "</b> 起");
-  if (DAY[DAY.length - 1].k !== "lesson") read += '<span class="sep" aria-hidden="true"></span>' + it("第 12 节 <b>" + clock(ll.to + off) + "</b> 止");
-  el.offRead.innerHTML = read;
-
-  el.ledeStart.textContent = clock(start());
-  el.ledeEnd.textContent = clock(end());
-  el.nowChip.hidden = el.axisChip.hidden = off === 0;
-  el.nowChip.textContent = el.axisChip.textContent = off === 0 ? "" : "含偏移 " + offLabel();
-
-  renderTimes();
-  renderLunchRead();
-  tick();
-  if (persist){ try { localStorage.setItem("offsetMin", String(off)); } catch (e) {} }
-}
-
-let flashTimer = 0;
-function flash(msg){
-  clearTimeout(flashTimer);
-  el.flash.textContent = msg;
-  el.foot.classList.add("hot");
-  flashTimer = setTimeout(() => { el.foot.classList.remove("hot"); }, 5000);
-}
-
-el.startNow.addEventListener("click", () => {
-  const now = new Date();
-  const m = now.getHours() * 60 + now.getMinutes();
-  const want = Math.ceil(m / STEP) * STEP - BASE_START;
-  setOffset(want, true);
-  if (want > maxOff()) flash("已塞不下整张表：最晚 " + clock(BASE_START + maxOff()) + " 开始，已设为 " + offLabel());
-  else flash("开始对齐到 " + clock(start()) + " · " + offWords());
-  el.range.focus({ preventScroll: true });
 });
-el.range.addEventListener("input", () => setOffset(Number(el.range.value), true));
-el.range.addEventListener("dblclick", () => setOffset(0, true));
-el.offReset.addEventListener("click", () => { setOffset(0, true); el.range.focus({ preventScroll: true }); });
-el.minus.addEventListener("click", () => setOffset(off - STEP, true));
-el.plus.addEventListener("click", () => setOffset(off + STEP, true));
+html += '</tbody>';
+week.insertAdjacentHTML("beforeend", html);
 
-/* ---------- 80-min break position ---------- */
-function gapHTML(pos){
-  const on = pos === lunchAfter;
-  const none = pos === 0;
-  const label = none ? "不放 80 min 休息，全天缩短 80 min" : "80 min 休息放在第 " + (2*pos) + " 节后";
-  return '<button class="gap' + (none ? " none" : "") + (on ? " on" : "") + '" type="button" role="radio" data-pos="' + pos + '"' +
-         ' aria-checked="' + on + '" aria-label="' + label + '" tabindex="' + (on ? 0 : -1) + '">' +
-         '<span>' + (none ? "无" : "休息") + '</span></button>';
-}
-function renderStrip(){
-  let html = "";
-  for (let b = 1; b <= BLOCKS; b++){
-    html += '<div class="blk" title="第 ' + b + ' 大节 · 第 ' + (2*b-1) + '–' + (2*b) + ' 节"><b>' + CN[b-1] + '</b><small>' + (2*b-1) + '·' + (2*b) + '</small></div>';
-    if (b < BLOCKS) html += gapHTML(b);
-  }
-  html += gapHTML(0);
-  el.strip.innerHTML = html;
-}
-function renderLunchRead(){
-  const L = lunchSeg(), after = 2 * lunchAfter, d = lunchAfter - LUNCH_DEFAULT;
-  const it = h => '<span class="it">' + h + "</span>";
-  const sep = '<span class="sep" aria-hidden="true"></span>';
-  el.lunchBig.textContent = whereText();
-  if (L){
-    el.lunchRead.innerHTML =
-      it(d === 0 ? "与原表一致" : "比原表" + (d < 0 ? "早" : "晚") + " " + Math.abs(d) + " 大节") + sep +
-      it("<b>" + clock(L.from + off) + " – " + clock(L.to + off) + "</b>") + sep +
-      it("前 " + after + " 节 / 后 " + (12 - after) + " 节");
-  } else {
-    el.lunchRead.innerHTML =
-      it("不放长休息") + sep + it("全天缩短 <b>80 min</b>，<b>" + clock(end()) + "</b> 收尾") + sep + it("第 1–12 节连上");
-  }
-  el.lunchChip.hidden = d === 0;
-  el.lunchChip.textContent = L ? "休息 · " + whereText() : "无长休息";
-  el.ledeLunch.textContent = L ? "其中一段休息 80 min" : "不设长休息";
+document.getElementById("legend").innerHTML = SUBJECTS.map(s =>
+  '<span class="key"' + (s.tip ? ' title="' + s.tip + '"' : '') + '>' +
+  '<span class="dot ' + s.cls + '"></span>' + s.name +
+  '<span class="kcount mono">' + s.count + ' 节 · ' + s.hours + ' h</span></span>'
+).join("");
 
-  const breaks = DAY.filter(x => x.k !== "lesson");
-  const total = dayEnd() - BASE_START;
-  el.tallyAll.textContent = Math.floor(total / 60) + " h" + (total % 60 ? " " + (total % 60) + " min" : "");
-  el.tallyRest.textContent = breaks.reduce((a, x) => a + x.len, 0) + " min";
-  el.tallyCount.textContent = breaks.length + " 次";
-}
-function setLunch(pos, persist){
-  pos = Math.round(pos);
-  if (!SLOTS.includes(pos)) pos = pos >= BLOCKS ? 0 : LUNCH_DEFAULT;   // old saved value 6 ("一天最后") → 无
-  lunchAfter = pos;
-  DAY = buildDay(lunchAfter);
-  el.settings.dataset.pos = pos;
-  el.lunchReset.disabled = pos === LUNCH_DEFAULT;
-  el.ribbon.style.setProperty("--total", dayEnd() - BASE_START);
-  renderRibbon();
-  renderStrip();
-  renderTicks();
-  setOffset(off, false);   // re-clamps to the (possibly shorter) day and refreshes every readout
-  if (persist){ try { localStorage.setItem("lunchAfter", String(pos)); } catch (e) {} }
-}
-const focusOn = () => { const g = el.strip.querySelector(".gap.on"); if (g) g.focus({ preventScroll: true }); };
-el.strip.addEventListener("click", e => {
-  const g = e.target.closest(".gap"); if (!g) return;
-  setLunch(Number(g.dataset.pos), true); focusOn();
-});
-el.strip.addEventListener("keydown", e => {
-  if (!e.target.closest(".gap")) return;
-  const dir = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : 0;
-  if (e.key === "Home") { e.preventDefault(); setLunch(SLOTS[0], true); focusOn(); return; }
-  if (e.key === "End")  { e.preventDefault(); setLunch(SLOTS[SLOTS.length - 1], true); focusOn(); return; }
-  if (!dir) return;
-  e.preventDefault();
-  const i = Math.max(0, Math.min(SLOTS.length - 1, SLOTS.indexOf(lunchAfter) + dir));
-  setLunch(SLOTS[i], true); focusOn();
-});
-el.lunchReset.addEventListener("click", () => { setLunch(LUNCH_DEFAULT, true); focusOn(); });
+const dayHeads = [...week.querySelectorAll(".dayhead")];
+const dayCells = DAYS.map((_, i) => [...week.querySelectorAll('.cell[data-day="' + i + '"]')]);
 
-/* ---------- live clock ---------- */
-function countdown(seconds){
-  const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60);
-  return m >= 60 ? Math.floor(m/60) + " h " + pad(m%60) + " min" : m + " min " + pad(s) + " s";
-}
+/* ---------- live clock + today highlight ---------- */
+const pad = n => String(n).padStart(2, "0");
 const WD = ["日","一","二","三","四","五","六"];
-let scrolled = false;
+const clockEl = document.getElementById("clock");
+const dateEl = document.getElementById("dateline");
+let shownDay = -1;
 
 function tick(){
   const now = new Date();
-  const secs = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
-  const mins = secs / 60;
-  el.clock.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
-  el.today.textContent = pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + " 周" + WD[now.getDay()];
-
-  const inDay = mins >= start() && mins < end();
-  el.line.hidden = !inDay;
-  ovNow.hidden = !inDay;
-  if (inDay){
-    const at = mins - start();
-    el.line.style.setProperty("--at", at.toFixed(2));
-    for (const t of el.axis.children){ t.classList.toggle("dodge", Math.abs(Number(t.style.getPropertyValue("--at")) - at) < 9); }
-    el.pill.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes());
-    ovNow.style.left = ((mins - start()) / (dayEnd() - BASE_START) * 100).toFixed(3) + "%";
-  } else {
-    for (const t of el.axis.children) t.classList.remove("dodge");
-  }
-
-  const ci = DAY.findIndex(d => mins >= d.from + off && mins < d.to + off);
-  const cb = ci === -1 ? 0 : DAY[ci].blk;
-  nodes.forEach((node, i) => {
-    if (i === ci) node.style.setProperty("--prog", (((mins - DAY[ci].from - off) / DAY[ci].len) * 100).toFixed(2) + "%");
-    else node.style.removeProperty("--prog");
-    node.classList.toggle("current", i === ci);
-    node.classList.toggle("past", ci !== -1 && i < ci);
-    ovSegs[i].classList.toggle("current", i === ci);
-    ovSegs[i].classList.toggle("past", ci !== -1 && i < ci);
-  });
-  spineNodes.forEach(sp => {
-    const b = Number(sp.dataset.blk);
-    sp.classList.toggle("current", b === cb);
-    sp.classList.toggle("past", ci !== -1 && b < cb);
-  });
-  ovGroups.forEach(g => g.classList.toggle("current", Number(g.dataset.blk) === cb));
-
-  if (ci !== -1){
-    const cur = DAY[ci], nxt = DAY[ci+1];
-    el.status.dataset.state = "on";
-    el.nowName.textContent = nameOf(cur);
-    el.nowRange.textContent = rangeText(cur);
-    el.meter.style.width = el.sbFill.style.width = (((mins - cur.from - off) / cur.len) * 100).toFixed(2) + "%";
-    el.nowCount.textContent = untilLabel(cur) + " " + countdown((cur.to + off) * 60 - secs);
-    el.nextName.textContent = nxt ? nameOf(nxt) : "放学";
-    el.nextRange.textContent = nxt ? rangeText(nxt) : clock(end()) + " 之后自由安排";
-  } else {
-    el.status.dataset.state = "off";
-    el.meter.style.width = "0%";
-    if (mins < start()){
-      el.nowName.textContent = "还没开始";
-      el.nowRange.textContent = nameOf(DAY[0]) + " " + clock(start()) + " 开始";
-      el.nowCount.textContent = "距开始 " + countdown(start() * 60 - secs);
-      el.nextName.textContent = nameOf(DAY[0]);
-      el.nextRange.textContent = rangeText(DAY[0]);
-    } else {
-      el.nowName.textContent = "今日已放学";
-      el.nowRange.textContent = nameOf(DAY[DAY.length - 1]) + " " + clock(end()) + " 结束";
-      el.nowCount.textContent = "距明早开始 " + countdown((start() + 1440) * 60 - secs);
-      el.nextName.textContent = nameOf(DAY[0]);
-      el.nextRange.textContent = rangeText(DAY[0]) + " · 明天";
-    }
-  }
-
-  const msg = el.nowName.textContent + "，" + el.nowRange.textContent;
-  if (msg !== lastAnnounced){ lastAnnounced = msg; el.live.textContent = msg; }
-  el.bar.dataset.state = el.status.dataset.state;
-  el.sbName.textContent = el.nowName.textContent;
-  el.sbRange.textContent = el.nowRange.textContent;
-  el.sbCount.textContent = el.nowCount.textContent;
-
-  if (!scrolled){
-    scrolled = true;
-    if (ci !== -1 && wide.matches){   // two-column only: the dashboard stays put, the timeline centres on now
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      nodes[ci].scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
-    }
+  clockEl.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+  dateEl.textContent = pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + " 周" + WD[now.getDay()];
+  const idx = (now.getDay() + 6) % 7;   // 周一 = 0
+  if (idx !== shownDay){
+    dayHeads.forEach((h, i) => {
+      h.classList.toggle("today", i === idx);
+      if (i === idx) h.setAttribute("aria-current", "date");
+      else h.removeAttribute("aria-current");
+    });
+    dayCells.forEach((cells, i) => cells.forEach(c => c.classList.toggle("today", i === idx)));
+    shownDay = idx;
   }
 }
-
-const wide = window.matchMedia("(min-width:1040px)");
-
-/* ---------- side pane: show a fade while there is more below (macOS hides scrollbars until you scroll) ---------- */
-const side = $("side");
-function syncSideFade(){
-  const more = wide.matches && side.scrollHeight - side.clientHeight - side.scrollTop > 8;
-  side.classList.toggle("more", more);
-}
-side.addEventListener("scroll", syncSideFade, { passive: true });
-window.addEventListener("resize", syncSideFade);
-new ResizeObserver(syncSideFade).observe(side);
-
-/* ---------- compact bar: only in the single-column layout, only while the now card is off-screen ---------- */
-let nowCardVisible = true;
-function syncBar(){ el.bar.classList.toggle("show", !wide.matches && !nowCardVisible); }
-new IntersectionObserver(entries => { nowCardVisible = entries[0].isIntersecting; syncBar(); }, { threshold: 0.05 }).observe(el.status);
-wide.addEventListener("change", syncBar);
-$("sbBtn").addEventListener("click", () => {
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
-});
-
-/* ---------- boot ---------- */
-let saved = 0, savedLunch = LUNCH_DEFAULT;
-try {
-  const v = parseInt(localStorage.getItem("offsetMin"), 10); if (Number.isFinite(v)) saved = v;
-  const l = parseInt(localStorage.getItem("lunchAfter"), 10); if (Number.isFinite(l)) savedLunch = l;
-} catch (e) {}
-setLunch(savedLunch, false);
-setOffset(saved, false);
+tick();
 setInterval(tick, 1000);
 </script>
 </body>

@@ -1,7 +1,7 @@
 {
   "name": "schedule",
   "private": true,
-  "description": "一日十二节 · 作息时刻表",
+  "description": "一周二十一节 · 固定周课表",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"
