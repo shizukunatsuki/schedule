@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F8F7F9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#262931" media="(prefers-color-scheme: dark)">
-<meta name="description" content="固定周课表：每天上午、下午、晚上各一节，六科间隔按节数均匀，整周全局显示，按今天高亮。">
+<meta name="description" content="固定周课表：起床 6:00，睡觉 23:00，每天上午、下午、晚上各一节，六科间隔按节数均匀，整周全局显示，按今天高亮。">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌸%3C/text%3E%3C/svg%3E">
 <title>一周二十一节</title>
@@ -179,6 +179,17 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
   font-size:var(--fs-foot);color:var(--faint);letter-spacing:.02em;
   -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
+/* day frame: dawn tinted with honey, dusk with fuji — half-strength soft over sunk */
+.frameband{
+  display:flex;align-items:center;justify-content:center;gap:7px;min-height:32px;
+  border-radius:var(--r-sm);font-size:var(--fs-foot);color:var(--faint);letter-spacing:.02em;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
+.frameband::before{content:"";width:6px;height:6px;border-radius:50%;flex:none}
+.frameband.dawn{background:color-mix(in srgb, var(--honey-soft) 50%, var(--sunk))}
+.frameband.dawn::before{background:var(--honey-mark)}
+.frameband.dusk{background:color-mix(in srgb, var(--fuji-soft) 50%, var(--sunk))}
+.frameband.dusk::before{background:var(--fuji-mark)}
 
 /* ---------- legend & note ---------- */
 .legend{display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center;margin:14px 2px 0;font-size:var(--fs-foot);color:var(--muted)}
@@ -217,6 +228,8 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
   .tile{min-height:46px;padding:4px 1px;font-size:var(--fs-foot);letter-spacing:0;border-radius:var(--r-sm)}
   .period-night .tile{min-height:40px}
   .breakband{min-height:22px;font-size:var(--fs-caption)}
+  .frameband{min-height:24px;font-size:var(--fs-caption);gap:5px}
+  .frameband::before{width:5px;height:5px}
   .masthead{gap:10px}
   .legend{gap:6px 12px}
 }
@@ -256,10 +269,10 @@ h1{margin:0;font-weight:600;font-size:clamp(28px,6.5vw,34px);line-height:1.15;le
 
   <section class="board panel" aria-label="每周课程表">
     <table class="week" id="week">
-      <caption class="sr-only">每周固定课程表：周一至周日，每天上午、下午、晚上各一节，共二十一节。</caption>
+      <caption class="sr-only">每周固定课程表：周一至周日，每天起床 6:00、上午、下午、晚上各一节、睡觉 23:00，共二十一节。</caption>
     </table>
     <div class="legend" id="legend"></div>
-    <p class="note">上午 / 下午为大节（5 h），晚上为小节（2 h）· 各科间隔按节数均匀，此表为穷举验证的全局最优。</p>
+    <p class="note">起床 6:00 · 睡觉 23:00 · 上午 / 下午为大节（5 h），晚上为小节（2 h）· 各科间隔按节数均匀，此表为穷举验证的全局最优。</p>
   </section>
 </div>
 
@@ -286,6 +299,10 @@ const BREAKS = [   // 放在第 n 个时段之后
   {after:0, name:"午休", text:"12:00–13:00 · 1 h"},
   {after:1, name:"晚休", text:"18:00–19:00 · 1 h"},
 ];
+const FRAME = {    // 一天的两端：晨光与夜雾
+  dawn:{name:"起床", text:"6:00 · 距上午课 1 h"},
+  dusk:{name:"睡觉", text:"23:00 · 晚课后 2 h"},
+};
 const SUBJ = Object.fromEntries(SUBJECTS.map(s => [s.name, s]));
 
 /* ---------- render once ---------- */
@@ -297,6 +314,8 @@ DAYS.forEach((d, i) => {
           '<span class="dnow">今天</span></th>';
 });
 html += '</tr></thead><tbody>';
+html += '<tr class="framerow"><th class="breakhead" scope="row"><span>' + FRAME.dawn.name + '</span></th>' +
+        '<td colspan="7"><div class="frameband dawn mono">' + FRAME.dawn.text + '</div></td></tr>';
 PERIODS.forEach((p, pi) => {
   html += '<tr class="period' + (p.night ? ' period-night' : '') + '">' +
           '<th class="rowhead" scope="row"><span class="pname">' + p.name + '</span>' +
@@ -311,6 +330,8 @@ PERIODS.forEach((p, pi) => {
             '<td colspan="7"><div class="breakband mono">' + br.text + '</div></td></tr>';
   }
 });
+html += '<tr class="framerow"><th class="breakhead" scope="row"><span>' + FRAME.dusk.name + '</span></th>' +
+        '<td colspan="7"><div class="frameband dusk mono">' + FRAME.dusk.text + '</div></td></tr>';
 html += '</tbody>';
 week.insertAdjacentHTML("beforeend", html);
 
